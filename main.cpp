@@ -1,12 +1,15 @@
 /*
+ * MinGW-W64 revision by
+ * (C) 2021 Raphael Kim @ rageworx software
+ * ----
  * (C) Copyright 2017 Fuzhou Rockchip Electronics Co., Ltd
  * Seth Liu 2017.03.01
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include   <unistd.h>
-#include   <dirent.h>
+#include <unistd.h>
+#include <dirent.h>
 #include "config.h"
 #include "DefineHeader.h"
 #include "gpt.h"
@@ -103,7 +106,7 @@ void ProgressInfoProc(DWORD deviceLayer, ENUM_PROGRESS_PROMPT promptID, long lon
 		strInfoText = szText;
 		break;
 	case ERASEUSERDATA_PROGRESS:
-		sprintf(szText, "<LocationID=%x> Erase Userdata partition total %lld, current %lld", deviceLayer, totalValue, currentValue);
+		sprintf(szText, "<LocationID=%lx> Erase Userdata partition total %lld, current %lld", deviceLayer, totalValue, currentValue);
 		strInfoText = szText;
 		break;
 	}
@@ -3284,6 +3287,8 @@ int main(int argc, char* argv[])
 	struct stat statBuf;
 
 	g_ConfigItemVec.clear();
+
+#ifndef _WIN32
 	sprintf(szProgramProcPath, "/proc/%d/exe", getpid());
 	if (readlink(szProgramProcPath, szProgramDir, 256) == -1)
 		strcpy(szProgramDir, ".");
@@ -3293,12 +3298,21 @@ int main(int argc, char* argv[])
 		if (pSlash)
 			*pSlash = '\0';
 	}
+#else
+    strcpy(szProgramProcPath, "." ); /// it will unsed be on Windows.
+    strcpy(szProgramDir, "." );
+#endif /// of _WIN32
 	strLogDir = szProgramDir;
 	strLogDir +=  "/log/";
 	strConfigFile = szProgramDir;
 	strConfigFile += "/config.ini";
+#ifndef _WIN32    
 	if (opendir(strLogDir.c_str()) == NULL)
 		mkdir(strLogDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);
+#else
+    if (opendir(strLogDir.c_str()) == NULL)
+		mkdir( strLogDir.c_str() );
+#endif /// of _WIN32
 	g_pLogObject = new CRKLog(strLogDir.c_str(), "log",true);
 
 	if(stat(strConfigFile.c_str(), &statBuf) < 0) {

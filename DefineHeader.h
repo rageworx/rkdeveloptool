@@ -22,12 +22,14 @@
 #include <sstream>
 #include <algorithm>
 using namespace std;
+#ifndef _WIN32
 typedef unsigned char BYTE, *PBYTE;
 typedef unsigned char UCHAR;
 typedef unsigned short WCHAR;
 typedef unsigned short USHORT;
 typedef unsigned int	UINT;
 typedef unsigned int	DWORD;
+#endif /// of _WIN32
 #define ALIGN(x, a)		__ALIGN_MASK((x), (a) - 1)
 #define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
 #define RK28_SEC2_RESERVED_LEN 473

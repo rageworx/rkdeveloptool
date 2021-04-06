@@ -4,7 +4,10 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+#include <ctime>
+#include <cstdio>
 #include "RKLog.h"
+
 int file_stat(string strPath)
 {
 	struct stat statBuf;
@@ -75,7 +78,8 @@ bool CRKLog::Write(string text)
 	string  strName;
 	FILE *file=NULL;
 	time(&now);
-	localtime_r(&now, &timeNow);
+	//localtime_r(&now, &timeNow);
+    memcpy( &timeNow, localtime(&now), sizeof( struct tm ) );
 	sprintf(szDateTime, "%04d-%02d-%02d.txt", timeNow.tm_year + 1900, timeNow.tm_mon + 1, timeNow.tm_mday);
 	strName = m_path + m_name+szDateTime;
 
