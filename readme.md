@@ -44,6 +44,9 @@ You should install pkg-config libusb-1.0:
 
 ## Static build required for Windows
 * MinGW-W64 may need to build binary as static.
+* There's two ways to solve this,
+* Proceed with `export LDFLAGS=-static;./configure` at step to doing ./configure.
+* Or,
 * Proceed step to configure, then edit Makefile.
 * Find CXXLINK and CLINK, ( may placed on each 140 and 153 line )
 * insert `-static` before `-o`.
