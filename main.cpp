@@ -38,7 +38,7 @@ CONFIG_ITEM_VECTOR g_ConfigItemVec;
     #define NORMAL_COLOR_ATTR  printf("%c[0m", 0x1B);
 #endif 
 #ifdef _WIN32
-    #define INTERNAL_VERSION    PACKAGE_VERSION"2.12"
+    #define INTERNAL_VERSION    PACKAGE_VERSION".2.12"
 #endif /// of _WIN32
 extern UINT CRC_32(unsigned char* pData, UINT ulSize);
 extern unsigned short CRC_16(unsigned char* aData, UINT aSize);
