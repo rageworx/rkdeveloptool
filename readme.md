@@ -41,3 +41,10 @@ if you encounter the error like below:
 
 You should install pkg-config libusb-1.0:
  ` sudo apt-get install pkg-config libusb-1.0 ` 
+
+## Static build required for Windows
+* MinGW-W64 may need to build binary as static.
+* Proceed step to configure, then edit Makefile.
+* Find CXXLINK and CLINK, ( may placed on each 140 and 153 line )
+* insert `-static` before `-o`.
+* then build it.
