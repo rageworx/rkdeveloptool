@@ -1,5 +1,11 @@
 # rkdeveloptool
-rkdeveloptool gives you a simple way to read/write rockusb device.let's start.
+
+This rkdeveloptool is focused on supporting Windows subsystem with libusb-1.0, libusbk or winusb.
+
+Rockchip not open their windows USB writing sources, only supports windows x86.32 with old MSVC.
+
+This version focused to find flashing method on Windows with MinGW-W64 from POSIX.
+
 
 ## Supported subsystems 
 
@@ -25,10 +31,10 @@ rkdeveloptool gives you a simple way to read/write rockusb device.let's start.
 2. `make`
 
 ## Features
-rkdeveloptool usage,input "rkdeveloptool -h" to see
+
+1. rkdeveloptool usage,input "rkdeveloptool -h" to see example:
+1. download kernel.img on Linux or MacOS:
 ```
-example:
-1.download kernel.img
 sudo ./rkdeveloptool db RKXXLoader.bin    //download usbplug to device
 sudo ./rkdeveloptool wl 0x8000 kernel.img //0x8000 is base of kernel partition,unit is sector.
 sudo ./rkdeveloptool rd                   //reset device
