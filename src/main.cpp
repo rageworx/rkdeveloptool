@@ -1,5 +1,5 @@
 /*
- * rkdeveloptool for Windows, MinGW-W64 
+ * rkdeveloptool for Windows, MinGW-W64, libusbk 
  * =======================================================
  * MinGW-W64 revision by
  * (C) 2021 Raphael Kim @ rageworx software
@@ -25,9 +25,13 @@
 #include "RKDevice.h"
 #include "RKImage.h"
 
-extern const char *szManufName[];
-CRKLog *g_pLogObject=NULL;
-CONFIG_ITEM_VECTOR g_ConfigItemVec;
+static KLST_DEVINFO_HANDLE  hDeviceInfo = NULL;
+static KUSB_HANDLE          hUSBK       = NULL;
+static KUSB_DRIVER_API      kUSBAPI = {0};
+
+extern const char*  szManufName[];
+CRKLog*             g_pLogObject    =   NULL;
+CONFIG_ITEM_VECTOR  g_ConfigItemVec;
 
 // MinGW-W64, MSYS2 may not use escape charactors for Windows console.
 #ifdef __MINGW32__
@@ -54,10 +58,6 @@ CONFIG_ITEM_VECTOR g_ConfigItemVec;
 #endif 
 
 #define STDOUTFLUSH                     fflush(stdout)
-
-#ifdef _WIN32
-    #define INTERNAL_VERSION            PACKAGE_VERSION".2.14"
-#endif /// of _WIN32
 
 extern UINT CRC_32(unsigned char* pData, UINT ulSize);
 extern unsigned short CRC_16(unsigned char* aData, UINT aSize);
@@ -3400,8 +3400,8 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     if((strcmp(strCmd.c_str(), "-V") == 0) || (strcmp(strCmd.c_str(), "--VERSION") == 0)) 
     {
 #ifdef _WIN32
-        printf( "rkdeveloptool ver %s(%s)-win32\r\n", 
-                PACKAGE_VERSION, INTERNAL_VERSION );
+        printf( "%s ver %s(%s)\r\n", 
+                APP_PACKAGE_NAME, PACKAGE_VERSION, APP_VERSION_STR );
 #else
         printf("rkdeveloptool ver %s\r\n", PACKAGE_VERSION);
 #endif /// of _WIN32
@@ -3507,17 +3507,35 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                 }
             }            
         }
-    } else if(strcmp(strCmd.c_str(), "TD") == 0) {
+    } 
+    else 
+    if(strcmp(strCmd.c_str(), "TD") == 0) 
+    {
         bSuccess = test_device(dev);
-    } else if (strcmp(strCmd.c_str(), "RID") == 0) {//Read Flash ID
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RID") == 0) 
+    {//Read Flash ID
         bSuccess = read_flash_id(dev);
-    } else if (strcmp(strCmd.c_str(), "RFI") == 0){//Read Flash Info
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RFI") == 0)
+    {//Read Flash Info
         bSuccess = read_flash_info(dev);
-    } else if (strcmp(strCmd.c_str(), "RCI") == 0) {//Read Chip Info
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RCI") == 0) 
+    {//Read Chip Info
         bSuccess = read_chip_info(dev);
-    } else if (strcmp(strCmd.c_str(), "RCB") == 0) {//Read Capability
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RCB") == 0) 
+    {//Read Capability
         bSuccess = read_capability(dev);
-    } else if(strcmp(strCmd.c_str(), "DB") == 0) {
+    } 
+    else 
+    if(strcmp(strCmd.c_str(), "DB") == 0) 
+    {
         if (argc > 2) {
             string strLoader;
             strLoader = argv[2];
@@ -3687,14 +3705,20 @@ void sighandler(int sig)
     sigproc = true;
     
     char prtbuff[512] = {0};
-    snprintf( prtbuff, 512, "Signal trapped : %d\n", sig );
-    write( 1, prtbuff, strlen( prtbuff ) );
-    //printf( "%s", prtbuff );
+    snprintf( prtbuff, 512, "Error : signal trapped = %d\n", sig );
 
-    if (g_pLogObject)
+    if ( g_pLogObject )
+    {
+        g_pLogObject->Record( prtbuff );
         delete g_pLogObject;
+    }
 
-    libusb_exit(NULL);
+    write( 1, prtbuff, strlen( prtbuff ) );
+
+    if ( hUSBK != NULL )
+    {
+        UsbK_Free( hUSBK );
+    }
     
     sigproc = false;
     exit(0);
@@ -3704,14 +3728,13 @@ int main(int argc, char* argv[])
 {
     // set up signal handler  --
     signal( SIGSEGV, sighandler );
-    signal( SIGINT, sighandler );
     // --------------------------
 
-    CRKScan *pScan = NULL;
-    int ret;
-    char szProgramProcPath[100] = {0};
-    char szProgramDir[256] = {0};
-    string strLogDir,strConfigFile;
+    CRKScan*    pScan = NULL;
+    int         ret;
+    char        szProgramProcPath[100] = {0};
+    char        szProgramDir[256] = {0};
+    string      strLogDir,strConfigFile;
     struct stat statBuf = {0};
 
     g_ConfigItemVec.clear();
@@ -3737,7 +3760,7 @@ int main(int argc, char* argv[])
     strConfigFile = szProgramDir;
     strConfigFile += "/config.ini";
 
-#ifndef _WIN32    
+#ifndef _WIN32 
     if (opendir(strLogDir.c_str()) == NULL)
         mkdir(strLogDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);
 #else
@@ -3768,18 +3791,24 @@ int main(int argc, char* argv[])
         parse_config_file(strConfigFile.c_str(), g_ConfigItemVec);
     }
 
-    ret = libusb_init(NULL);
-    if (ret < 0) 
+    /*
+    if ( g_pLogObject )
+    {
+        g_pLogObject->Record( "Initializing libusbk ..." );
+    }
+    
+    if ( UsbK_Init( &hUSBK, NULL ) == FALSE )
     {
         if (g_pLogObject) 
         {
-            g_pLogObject->Record("Error: libusb_init failed, err=%d", ret);
+            g_pLogObject->Record("Error: UsbK_Init() failed, code = %08X", GetLastError() );
             delete g_pLogObject;
         }
         return -1;
     }
-
-    pScan = new CRKScan();
+    */
+    
+    pScan = new CRKScan( (void*)hUSBK );
     if (!pScan) 
     {
         if (g_pLogObject) 
@@ -3787,14 +3816,21 @@ int main(int argc, char* argv[])
             g_pLogObject->Record("Error: failed to create object for searching device");
             delete g_pLogObject;
         }
-        libusb_exit(NULL);
+
+        if ( hUSBK != NULL )
+        {
+            UsbK_Free( hUSBK );
+        } 
+        
         return -2;
     }
     
     pScan->SetVidPid();
 
     if (argc == 1)
+    {
         usage();
+    }
     else 
     if ( handle_command(argc, argv, pScan) )
     {
@@ -3812,7 +3848,10 @@ int main(int argc, char* argv[])
     if (g_pLogObject)
         delete g_pLogObject;
 
-    libusb_exit(NULL);
+    if ( hUSBK != NULL )
+    {
+        KUSB_Free( hUSBK );
+    }
 
     return 0;
 }

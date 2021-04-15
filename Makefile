@@ -24,9 +24,7 @@ TARGET  = $(DIR_BIN)/$(TGT_BIN)$(EXT_BIN)
 CFLAGS += -I$(DIR_SRC)
 CFLAGS += -I$(LIBUSBK_INC)
 CFLAGS += -Ires
-CFLAGS += -I/mingw64/include/libusb-1.0
 LFLAGS += $(LIBUSBK_DLL)
-LFLAGS += -lusb-1.0
 LFLAGS += -s -O2 -static
 
 # Windows Resource Flags
@@ -55,6 +53,7 @@ prepare:
 clean:
 	@echo "Cleaning built targets ..."
 	@rm -rf $(OBJS)
+	@rm -rf $(WROBJ)
 	@rm -rf $(TARGET)
 
 $(OBJS): $(DIR_OBJ)/%.o: $(DIR_SRC)/%.cpp
@@ -68,5 +67,6 @@ $(WROBJ): $(WRES) res/resource.h
 $(TARGET): $(OBJS) $(WROBJ)
 	@echo "Generating $@ ..."
 	@$(LNK) $^ $(LFLAGS) -o $@
+	@cp -f $(LIBUSBK_DLL) $(DIR_BIN)
 	@echo "done."
 

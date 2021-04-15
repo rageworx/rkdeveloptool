@@ -24,7 +24,7 @@ LANGUAGE LANG_NEUTRAL, LANG_NEUTRAL
             VALUE "LegalCopyright", 	"Raphael Kim (rageworx@gmail.com)"
             VALUE "LegalTrademarks", 	"Rageworx software"
             VALUE "OriginalFilename", 	APP_PACKAGE_NAME
-            VALUE "ProductName", 		PACKAGE_NAME
+            VALUE "ProductName", 		APP_PACKAGE_NAME
             VALUE "ProductVersion",     APP_VERSION_STR
         }
     }

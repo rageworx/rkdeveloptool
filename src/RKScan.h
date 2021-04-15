@@ -24,8 +24,12 @@ class CRKScan
 
         int GetDEVICE_COUNTS();
         property<CRKScan, int, READ_ONLY> DEVICE_COUNTS;
-
-        CRKScan(UINT uiMscTimeout = 30, UINT uiRKusbTimeout = 20);
+        
+    public:
+        CRKScan(void* usbkhandle = NULL, UINT uiMscTimeout = 30, UINT uiRKusbTimeout = 20);
+        ~CRKScan();
+        
+    public:
         void SetVidPid(USHORT mscVid = 0, USHORT mscPid = 0);
         void AddRockusbVidPid(USHORT newVid, USHORT newPid, USHORT oldVid, USHORT oldPid);
         bool FindRockusbVidPid(ENUM_RKDEVICE_TYPE type, USHORT &usVid, USHORT &usPid);
@@ -36,15 +40,17 @@ class CRKScan
         int GetPos(UINT locationID);
         bool GetDevice(STRUCT_RKDEVICE_DESC &device, int pos);
         bool SetLogObject(CRKLog *pLog);
-        ~CRKScan();
         
     private:
-        UINT   m_waitRKusbSecond;
-        UINT   m_waitMscSecond;
-        CRKLog *m_log;
-        RKDEVICE_DESC_SET m_list;
+        void*               m_usbkHandle;
+        UINT                m_waitRKusbSecond;
+        UINT                m_waitMscSecond;
+        CRKLog*             m_log;
+        RKDEVICE_DESC_SET   m_list;
         RKDEVICE_CONFIG_SET m_deviceConfigSet;
         RKDEVICE_CONFIG_SET m_deviceMscConfigSet;
+        
+    private:
         int FindConfigSetPos(RKDEVICE_CONFIG_SET &devConfigSet, USHORT vid, USHORT pid);
         int FindWaitSetPos(const RKDEVICE_CONFIG_SET &waitDeviceSet, USHORT vid, USHORT pid);
         void EnumerateUsbDevice(RKDEVICE_DESC_SET &list, UINT &uiTotalMatchDevices);

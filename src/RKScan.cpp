@@ -33,7 +33,11 @@ void CRKScan::SetRKUSB_TIMEOUT(UINT value)
     m_waitRKusbSecond = value;
 }
 
-CRKScan::CRKScan(UINT uiMscTimeout, UINT uiRKusbTimeout)
+CRKScan::CRKScan( void* usbkhandle, UINT uiMscTimeout, UINT uiRKusbTimeout )
+ : m_usbkHandle( usbkhandle ),
+   m_waitMscSecond( uiMscTimeout ),
+   m_waitRKusbSecond( uiRKusbTimeout ),
+   m_log( NULL )
 {
     DEVICE_COUNTS.setContainer(this);
     DEVICE_COUNTS.getter(&CRKScan::GetDEVICE_COUNTS);
@@ -46,9 +50,6 @@ CRKScan::CRKScan(UINT uiMscTimeout, UINT uiRKusbTimeout)
     RKUSB_TIMEOUT.getter(&CRKScan::GetRKUSB_TIMEOUT);
     RKUSB_TIMEOUT.setter(&CRKScan::SetRKUSB_TIMEOUT);
 
-    m_waitMscSecond = uiMscTimeout;
-    m_waitRKusbSecond = uiRKusbTimeout;
-    m_log = NULL;
     m_list.clear();
     m_deviceConfigSet.clear();
     m_deviceMscConfigSet.clear();
@@ -215,6 +216,7 @@ void CRKScan::SetVidPid(USHORT mscVid, USHORT mscPid)
         }
     }
 }
+
 int CRKScan::FindWaitSetPos(const RKDEVICE_CONFIG_SET &waitDeviceSet, USHORT vid, USHORT pid)
 {
     int pos=-1;
@@ -250,59 +252,56 @@ int CRKScan::FindConfigSetPos(RKDEVICE_CONFIG_SET &devConfigSet, USHORT vid, USH
 void CRKScan::EnumerateUsbDevice(RKDEVICE_DESC_SET &list, UINT &uiTotalMatchDevices)
 {
     STRUCT_RKDEVICE_DESC desc;
-    struct libusb_device_descriptor descriptor;
-    int ret;
-    int cnt;
-
-    uiTotalMatchDevices = 0;
-    libusb_device **pDevs = NULL;
-    libusb_device *dev;
     
-    ret = libusb_get_device_list(NULL, &pDevs);
-    if (ret < 0) 
+    KLST_HANDLE         hDevList = NULL;
+    KLST_DEVINFO_HANDLE hDevInfo = NULL;
+    
+    if ( LstK_Init( &hDevList, KLST_FLAG_NONE ) == FALSE )
     {
-        if (m_log)
-            m_log->Record("Error:EnumerateUsbDevice-->get_device_list failed,err=%d!", ret);
+        if ( m_log )
+            m_log->Record( "Error, Lst_Init() failure.\n" );
+        
         return;
     }
     
-    cnt = ret;
+    UINT devcount = 0;
     
-    for ( size_t i = 0; i < cnt; i++ ) 
+    LstK_Count( hDevList, &devcount );
+    
+    if ( devcount == 0 )
     {
-        dev = pDevs[i];
+        if ( m_log )
+            m_log->Record( "Error, device not found !\n" );
         
-        if (dev) 
+        LstK_Free( hDevList );
+        return;
+    }
+    
+    // enumerate device list ....
+    
+    LstK_MoveReset( hDevList );
+    while( LstK_MoveNext( hDevList, &hDevInfo ) )
+    {
+        if ( hDevInfo != NULL )
         {
-            ret = libusb_get_device_descriptor (dev, &descriptor);
+            desc.emDeviceType   = RKNONE_DEVICE;
+            desc.emUsbType      = RKUSB_NONE;
+            desc.pUsbHandle     = NULL;         /// m_usbkHandle;
+            desc.usbcdUsb       = 0;            /// descriptor.bcdUSB;
+            desc.usVid          = hDevInfo->Common.Vid;
+            desc.usPid          = hDevInfo->Common.Pid;
+            desc.driverID       = hDevInfo->DriverID;
             
-            if (ret < 0) 
-            {
-                libusb_free_device_list(pDevs, 1);
-                
-                if (m_log)
-                    m_log->Record("Error:EnumerateUsbDevice-->get_device_descriptor failed,err=%d!", ret);
-
-                return;
-            }
-
-            desc.emDeviceType = RKNONE_DEVICE;
-            desc.emUsbType = RKUSB_NONE;
-            desc.pUsbHandle = (void *)dev;
-            desc.usbcdUsb = descriptor.bcdUSB;
-            desc.usVid = descriptor.idVendor;
-            desc.usPid = descriptor.idProduct;
-            desc.uiLocationID = libusb_get_bus_number(dev);
+            desc.uiLocationID   = hDevInfo->BusNumber;
             desc.uiLocationID <<= 8;
-            desc.uiLocationID += libusb_get_port_number(dev);
+            desc.uiLocationID  |= 0;            /// DeviceAddress;
 
-            libusb_ref_device(dev);
             uiTotalMatchDevices++;
             list.push_back(desc);
         }
     }
-
-    libusb_free_device_list(pDevs, 1);
+    
+    LstK_Free( hDevList );
 }
 
 void CRKScan::FreeDeviceList(RKDEVICE_DESC_SET &list)
@@ -312,7 +311,9 @@ void CRKScan::FreeDeviceList(RKDEVICE_DESC_SET &list)
     {
         if ((*iter).pUsbHandle) 
         {
-            libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+            //libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+            KUSB_HANDLE hDev = (KUSB_HANDLE)(*iter).pUsbHandle;
+            UsbK_Free( hDev );
             (*iter).pUsbHandle = NULL;
         }
     }
@@ -370,7 +371,9 @@ int CRKScan::Search(UINT type)
         {
             if ((*iter).pUsbHandle) 
             {
-                libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                //libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                KUSB_HANDLE hDev = (KUSB_HANDLE)(*iter).pUsbHandle;
+                UsbK_Free( hDev );                
                 (*iter).pUsbHandle = NULL;
             }
             
@@ -392,7 +395,9 @@ int CRKScan::Search(UINT type)
             {
                 if ((*iter).pUsbHandle) 
                 {
-                    libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                    //libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                    KUSB_HANDLE hDev = (KUSB_HANDLE)(*iter).pUsbHandle;
+                    UsbK_Free( hDev );
                     (*iter).pUsbHandle = NULL;
                 }
                 
@@ -420,7 +425,9 @@ int CRKScan::Search(UINT type)
             {
                 if ((*iter).pUsbHandle) 
                 {
-                    libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                    //libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                    KUSB_HANDLE hDev = (KUSB_HANDLE)(*iter).pUsbHandle;
+                    UsbK_Free( hDev );                    
                     (*iter).pUsbHandle = NULL;
                 }
                 
@@ -448,7 +455,9 @@ int CRKScan::Search(UINT type)
             {
                 if ((*iter).pUsbHandle) 
                 {
-                    libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                    //libusb_unref_device((libusb_device *)((*iter).pUsbHandle));
+                    KUSB_HANDLE hDev = (KUSB_HANDLE)(*iter).pUsbHandle;
+                    UsbK_Free( hDev );
                     (*iter).pUsbHandle = NULL;
                 }
                 
@@ -689,7 +698,9 @@ bool CRKScan::Wait(STRUCT_RKDEVICE_DESC &device, ENUM_RKUSB_TYPE usbType, USHORT
             device.pUsbHandle= (*iter).pUsbHandle;
             device.emUsbType = usbType;
             device.usbcdUsb = (*iter).usbcdUsb;
-            libusb_ref_device((libusb_device *)device.pUsbHandle);
+            //libusb_ref_device((libusb_device *)device.pUsbHandle);
+            KUSB_HANDLE hDev = (KUSB_HANDLE)device.pUsbHandle;
+            UsbK_Free( hDev );
 
             if (usbType == RKUSB_MSC) 
             {

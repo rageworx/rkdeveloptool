@@ -12,6 +12,8 @@
 #define BULK_EP_OUT     0x82    
 #define BULK_EP_IN      0x08    
 
+static KUSB_DRIVER_API kUSBAPI = {0};
+
 extern unsigned short CRC_CCITT(unsigned char* p, UINT CalculateNumber);
 
 CRKComm::CRKComm(CRKLog *pLog)
@@ -40,33 +42,35 @@ bool CRKUsbComm::InitializeUsb(STRUCT_RKDEVICE_DESC devDesc)
     m_pipeBulkOut = 0;
     m_interfaceNum = -1;
     
+    /*
     if (!devDesc.pUsbHandle) 
         return false;
+    */
 
     memcpy(&m_deviceDesc, &devDesc, sizeof(STRUCT_RKDEVICE_DESC));
     
-    int iRet;
-    iRet = libusb_open((libusb_device *)devDesc.pUsbHandle, (libusb_device_handle **)&m_pUsbHandle);
-    if (iRet!=0) 
+    
+    if ( LibK_LoadDriverAPI( &kUSBAPI, devDesc.driverID ) == FALSE )
     {
         if (m_log) 
         {
-            m_log->Record("Error:InitializeUsb-->open device failed,err=%d", iRet);
+            m_log->Record("Error: LibK_LoadDriverAPI failure.\n" );
+            return false;
+        }
         }
         
+    KUSB_HANDLE hUDev = NULL;
+    
+    if ( kUSBAPI.Init( &hUDev, NULL ) == FALSE )
+    {
+        if (m_log) 
+        {
+            m_log->Record("Error:InitializeUsb-->get device config descriptor failed.\n" );
+        }
         return false;
     }
     
-    struct libusb_config_descriptor *pConfigDesc=NULL;
-    iRet = libusb_get_active_config_descriptor((libusb_device *)devDesc.pUsbHandle, &pConfigDesc);
-    if (iRet!=0) 
-    {
-        if (m_log) 
-        {
-            m_log->Record("Error:InitializeUsb-->get device config descriptor failed, err=%d", iRet);
-        }
-        return false;
-    }
+    /*
     
     const struct libusb_interface *pInterface;
     const struct libusb_endpoint_descriptor *pEndpointDesc;
@@ -146,6 +150,8 @@ bool CRKUsbComm::InitializeUsb(STRUCT_RKDEVICE_DESC devDesc)
     }
     
     libusb_free_config_descriptor(pConfigDesc);
+    
+    */
     return false;
 }
 
@@ -153,7 +159,7 @@ void CRKUsbComm::UninitializeUsb()
 {
     if (m_pUsbHandle) 
     {
-        libusb_close((libusb_device_handle *)m_pUsbHandle);
+        //libusb_close((libusb_device_handle *)m_pUsbHandle);
         m_pUsbHandle = NULL;
     }
     
@@ -175,7 +181,7 @@ bool CRKUsbComm::Reset_Usb_Device()
     int iRet = -1;
     if (m_pUsbHandle) 
     {
-        iRet=libusb_reset_device((libusb_device_handle *)m_pUsbHandle);
+        //iRet=libusb_reset_device((libusb_device_handle *)m_pUsbHandle);
     }
     return (iRet == 0) ? true : false;
 }
@@ -185,6 +191,7 @@ bool CRKUsbComm::RKU_Read(BYTE* lpBuffer, DWORD dwSize)
     int  iRet;
     int  nRead;
 
+/*
     iRet = libusb_bulk_transfer((libusb_device_handle *)m_pUsbHandle, m_pipeBulkOut, lpBuffer, dwSize, &nRead, CMD_TIMEOUT);
     if (iRet!=0) 
     {
@@ -204,6 +211,7 @@ bool CRKUsbComm::RKU_Read(BYTE* lpBuffer, DWORD dwSize)
         }
         return false;
     }
+*/
     return true;
 }
 
@@ -211,7 +219,7 @@ bool CRKUsbComm::RKU_Write(BYTE* lpBuffer, DWORD dwSize)
 {
     int iRet = -1;
     int nWrite = -1;
-    
+/*  
     printf( "(debug)libusb_bulk_transfer, end point=0x%02X, 0x%lX, %u bytes, timeout = %u.\n",
             m_pipeBulkIn, lpBuffer, dwSize, CMD_TIMEOUT );
     fflush( stdout );
@@ -237,7 +245,7 @@ bool CRKUsbComm::RKU_Write(BYTE* lpBuffer, DWORD dwSize)
         }
         return false;
     }
-    
+*/    
     return true;
 }
 int CRKUsbComm::RandomInteger(int low, int high)
@@ -343,6 +351,7 @@ DWORD CRKUsbComm::RKU_Read_EX(BYTE* lpBuffer, DWORD dwSize)
 {
     int  iRet;
     int  nRead;
+ /*
     iRet = libusb_bulk_transfer((libusb_device_handle *)m_pUsbHandle, m_pipeBulkIn, lpBuffer, dwSize, &nRead, 5000);
     if (iRet != 0) {
         if (m_log) {
@@ -350,6 +359,7 @@ DWORD CRKUsbComm::RKU_Read_EX(BYTE* lpBuffer, DWORD dwSize)
         }
         return 0;
     }
+ */
     return nRead;
 }
 
@@ -859,7 +869,7 @@ int CRKUsbComm::RKU_DeviceRequest(DWORD dwRequest, BYTE *lpBuffer, DWORD dwDataS
     {
         nSendBytes = ( (dwDataSize - dwTotalSended) > 4096) ? 4096 : (dwDataSize - dwTotalSended);
         
-        iRet = libusb_control_transfer((libusb_device_handle *)m_pUsbHandle, 0x40, 0xC, 0, dwRequest, pData + dwTotalSended, nSendBytes, CMD_TIMEOUT);
+        //iRet = libusb_control_transfer((libusb_device_handle *)m_pUsbHandle, 0x40, 0xC, 0, dwRequest, pData + dwTotalSended, nSendBytes, CMD_TIMEOUT);
         if (iRet != (int)nSendBytes) 
         {
             if (m_log) 
@@ -875,7 +885,7 @@ int CRKUsbComm::RKU_DeviceRequest(DWORD dwRequest, BYTE *lpBuffer, DWORD dwDataS
 
     if(bSendPendPacket) {
         BYTE ucFillByte = 0;
-        iRet = libusb_control_transfer((libusb_device_handle *)m_pUsbHandle, 0x40, 0xC, 0, dwRequest, &ucFillByte, 1, CMD_TIMEOUT);
+        //iRet = libusb_control_transfer((libusb_device_handle *)m_pUsbHandle, 0x40, 0xC, 0, dwRequest, &ucFillByte, 1, CMD_TIMEOUT);
         if (iRet != 0) {
             if (m_log) {
                 m_log->Record("Error:RKU_DeviceRequest-->DeviceRequest vendor=0x%x failed, err=%d", dwRequest, iRet);
