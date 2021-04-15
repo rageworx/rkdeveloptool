@@ -1,0 +1,38 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDC_ICON_A         ICON           ".\\appicon.ico"
+
+LANGUAGE LANG_NEUTRAL, LANG_NEUTRAL
+1 VERSIONINFO
+    FILEVERSION     APP_VERSION
+    PRODUCTVERSION  APP_VERSION
+    FILEOS          VOS_NT_WINDOWS32
+    FILETYPE        VFT_APP
+    FILESUBTYPE     VFT2_UNKNOWN
+    FILEFLAGSMASK   0x0000003F
+    FILEFLAGS       0x00000000
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "00000000"
+        {
+            VALUE "CompanyName", 		"Rageworx software"
+            VALUE "FileDescription", 	PACKAGE_NAME
+            VALUE "InternalName", 		APP_PACKAGE_NAME
+            VALUE "LegalCopyright", 	"Raphael Kim (rageworx@gmail.com)"
+            VALUE "LegalTrademarks", 	"Rageworx software"
+            VALUE "OriginalFilename", 	APP_PACKAGE_NAME
+            VALUE "ProductName", 		PACKAGE_NAME
+            VALUE "ProductVersion",     APP_VERSION_STR
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0000, 0x0000
+    }
+}
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+1                  RT_MANIFEST      ".\\manifest.xml"
