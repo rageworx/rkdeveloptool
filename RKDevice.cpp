@@ -590,37 +590,7 @@ bool CRKDevice::CheckChip()
         }
         
         DWORD cVal = *pValue;
-        /*
-        if (*pValue == 0x524B3237) {
-            curDeviceType = RK27_DEVICE;
-        } else if (*pValue == 0x32373341) {
-            curDeviceType = RKCAYMAN_DEVICE;
-        } else if (*pValue == 0x524B3238) {
-            curDeviceType = RK28_DEVICE;
-        } else if (*pValue == 0x32383158) {
-            curDeviceType = RK281X_DEVICE;
-        } else if (*pValue == 0x32383242) {
-            curDeviceType = RKPANDA_DEVICE;
-        } else if (*pValue == 0x32393058) {
-            curDeviceType = RK29_DEVICE;
-        } else if (*pValue == 0x32393258) {
-            curDeviceType = RK292X_DEVICE;
-        } else if (*pValue == 0x33303041) {
-            curDeviceType = RK30_DEVICE;
-        } else if (*pValue == 0x33313041) {
-            curDeviceType = RK30B_DEVICE;
-        } else if (*pValue == 0x33313042) {
-            curDeviceType = RK31_DEVICE;
-        } else if (*pValue == 0x33323041) {
-            curDeviceType = RK32_DEVICE;
-        } else if (*pValue == 0x32363243) {
-            curDeviceType = RKSMART_DEVICE;
-        } else if (*pValue == 0x6E616E6F) {
-            curDeviceType = RKNANO_DEVICE;
-        } else if (*pValue == 0x4E4F5243) {
-            curDeviceType = RKCROWN_DEVICE;
-        }
-        */
+
         switch( cVal )
         {
             case 0x524B3237:

@@ -117,10 +117,6 @@ bool CRKLog::Write(string text)
         text = szDateTime + text + "\r\n";
         fwrite(text.c_str(), 1, text.size() * sizeof(char), file);
         fclose(file);
- #ifdef DEBUG
-        printf( "(debug.log)%s", text.c_str() );
-        fflush( stdout );
- #endif /// of DEBUG
     } 
     catch (...) 
     {

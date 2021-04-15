@@ -12,6 +12,10 @@
 
 #include <unistd.h>
 #include <dirent.h>
+#include <signal.h>
+#include <cstdio>
+#include <cstdlib>
+
 #include "config.h"
 #include "DefineHeader.h"
 #include "gpt.h"
@@ -3673,8 +3677,36 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     return bSuccess;
 }
 
+static bool sigproc = false;
+
+void sighandler(int sig)
+{
+    if ( sigproc == true )
+        return;
+    
+    sigproc = true;
+    
+    char prtbuff[512] = {0};
+    snprintf( prtbuff, 512, "Signal trapped : %d\n", sig );
+    write( 1, prtbuff, strlen( prtbuff ) );
+    //printf( "%s", prtbuff );
+
+    if (g_pLogObject)
+        delete g_pLogObject;
+
+    libusb_exit(NULL);
+    
+    sigproc = false;
+    exit(0);
+}
+
 int main(int argc, char* argv[])
 {
+    // set up signal handler  --
+    signal( SIGSEGV, sighandler );
+    signal( SIGINT, sighandler );
+    // --------------------------
+
     CRKScan *pScan = NULL;
     int ret;
     char szProgramProcPath[100] = {0};
