@@ -31,10 +31,10 @@ using namespace std;
 
 /* minGW-W64 already defined these types */
 #ifndef _WIN32
-    typedef unsigned char BYTE, *PBYTE;
-    typedef unsigned char UCHAR;
-    typedef unsigned short WCHAR;
-    typedef unsigned short USHORT;
+    typedef unsigned char   BYTE, *PBYTE;
+    typedef unsigned char   UCHAR;
+    typedef unsigned short  WCHAR;
+    typedef unsigned short  USHORT;
     typedef unsigned int	UINT;
     typedef unsigned int	DWORD;
 #endif /// of _WIN32

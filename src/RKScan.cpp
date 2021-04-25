@@ -6,6 +6,8 @@
  */
 
 #include "RKScan.h"
+#include "luktk.h"
+
 #define BUSID(id)  ((id & 0x0000FF00) >> 8)
 
 int CRKScan::GetDEVICE_COUNTS()
@@ -284,20 +286,36 @@ void CRKScan::EnumerateUsbDevice(RKDEVICE_DESC_SET &list, UINT &uiTotalMatchDevi
     {
         if ( hDevInfo != NULL )
         {
-            desc.emDeviceType   = RKNONE_DEVICE;
-            desc.emUsbType      = RKUSB_NONE;
-            desc.pUsbHandle     = NULL;         /// m_usbkHandle;
-            desc.usbcdUsb       = 0;            /// descriptor.bcdUSB;
-            desc.usVid          = hDevInfo->Common.Vid;
-            desc.usPid          = hDevInfo->Common.Pid;
-            desc.driverID       = hDevInfo->DriverID;
+            // Create a new instance for device handling.
+            KLST_HANDLE* hDevList = NULL;
+            KLST_DEVINFO_HANDLE* hDevInfoNew = NULL;
             
-            desc.uiLocationID   = hDevInfo->BusNumber;
-            desc.uiLocationID <<= 8;
-            desc.uiLocationID  |= 0;            /// DeviceAddress;
-
-            uiTotalMatchDevices++;
-            list.push_back(desc);
+            bool kret = TRUE;
+            /*
+            bool kret = luktk_GetTestDeviceEx( &hDevList, &hDevInfoNew, 
+                                               hDevInfo->Common.Vid,
+                                               hDevInfo->Common.Pid );
+            */
+            if ( kret == true )
+            {
+                desc.emDeviceType   = RKNONE_DEVICE;
+                desc.emUsbType      = RKUSB_NONE;
+                desc.pUsbHandle     = NULL;         /// m_usbkHandle;
+                desc.usbcdUsb       = 0;            /// descriptor.bcdUSB;
+                desc.usVid          = hDevInfo->Common.Vid;
+                desc.usPid          = hDevInfo->Common.Pid;
+                desc.driverID       = hDevInfo->DriverID;
+                desc.uiLocationID   = hDevInfo->Common.MI;
+                
+                /*
+                desc.uiLocationID   = hDevInfo->BusNumber;
+                desc.uiLocationID <<= 8;
+                desc.uiLocationID  |= 0;            /// DeviceAddress;
+                */
+                
+                uiTotalMatchDevices++;
+                list.push_back(desc);
+            }
         }
     }
     

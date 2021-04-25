@@ -3791,7 +3791,8 @@ int main(int argc, char* argv[])
         parse_config_file(strConfigFile.c_str(), g_ConfigItemVec);
     }
 
-    /*
+    /* --- libusk dosen't initialize as global  ---
+    
     if ( g_pLogObject )
     {
         g_pLogObject->Record( "Initializing libusbk ..." );
