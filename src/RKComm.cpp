@@ -1,4 +1,6 @@
 /*
+ * (C) 2021 Raphael Kim, libusbk version
+ *
  * (C) Copyright 2017 Fuzhou Rockchip Electronics Co., Ltd
  * Seth Liu 2017.03.01
  *
@@ -9,18 +11,33 @@
 #include "RKLog.h"
 #include "Endian.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+// this end points will for libusb.
 #define BULK_EP_OUT     0x82    
 #define BULK_EP_IN      0x08    
 
-static KUSB_DRIVER_API kUSBAPI = {0};
+// Rockchip device Vendor ID
+#define RK_USB_VID          0x2207
 
+// Rockchip device Product ID
+#define RK_USB_PID_RK3288   0x320A
+#define RK_USB_PID_RK3328   0x320C
+#define RK_USB_PID_RK3399   0x330C
+
+////////////////////////////////////////////////////////////////////////////////
+
+static KUSB_DRIVER_API kUSBAPI = {0};
 extern unsigned short CRC_CCITT(unsigned char* p, UINT CalculateNumber);
 
+////////////////////////////////////////////////////////////////////////////////
+
 CRKComm::CRKComm(CRKLog *pLog)
+  : m_log( pLog )
 {
     memset(&m_deviceDesc,0,sizeof(STRUCT_RKDEVICE_DESC));
-    m_log = pLog;
 }
+
 CRKComm::~CRKComm()
 {
 }
@@ -42,36 +59,67 @@ bool CRKUsbComm::InitializeUsb(STRUCT_RKDEVICE_DESC devDesc)
     m_pipeBulkOut = 0;
     m_interfaceNum = -1;
     
-    /*
-    if (!devDesc.pUsbHandle) 
-        return false;
-    */
+    // clear cstructure.
+    memset( &m_deviceDesc, 0, sizeof(STRUCT_RKDEVICE_DESC) );
+    
+    KLST_HANDLE deviceList = NULL;
+    KLST_DEVINFO_HANDLE deviceInfo = NULL;
 
-    memcpy(&m_deviceDesc, &devDesc, sizeof(STRUCT_RKDEVICE_DESC));
-    
-    
-    if ( LibK_LoadDriverAPI( &kUSBAPI, devDesc.driverID ) == FALSE )
+    // enumerate devices, and initialize it.
+    if ( LstK_Init( &deviceList, KLST_FLAG_NONE  ) == FALSE )
     {
         if (m_log) 
-        {
-            m_log->Record("Error: LibK_LoadDriverAPI failure.\n" );
-            return false;
-        }
-        }
-        
-    KUSB_HANDLE hUDev = NULL;
-    
-    if ( kUSBAPI.Init( &hUDev, NULL ) == FALSE )
-    {
-        if (m_log) 
-        {
-            m_log->Record("Error:InitializeUsb-->get device config descriptor failed.\n" );
-        }
+            m_log->Record("Error: LstK_Init failure.\n" );
+
         return false;
     }
     
-    /*
+    UINT count = 0;
+    LstK_Count( deviceList, &count );
+        
+    if ( count == 0 )
+    {
+        if (m_log) 
+            m_log->Record("Error: LstK_Count, no devices found.\n" );
+
+        return false;    
+    }
     
+    // find device in list -
+    BOOL bFound = LstK_FindByVidPid( deviceList, devDesc.usVid, devDesc.usPid, &deviceInfo );
+
+    if ( bFound == TRUE )
+    {
+        if (m_log) 
+            m_log->Record( "Found a device, %04u:%04u\n", 
+                           deviceInfo->Common.Vid, deviceInfo->Common.Pid );
+
+        memcpy(&m_deviceDesc, &devDesc, sizeof(STRUCT_RKDEVICE_DESC));
+        
+        if ( LibK_LoadDriverAPI( &kUSBAPI, devDesc.driverID ) == FALSE )
+        {
+            if (m_log) 
+                m_log->Record("Error: LibK_LoadDriverAPI failure.\n" );
+
+            return false;
+        }
+            
+        KUSB_HANDLE hUDev = NULL;
+        
+        if ( kUSBAPI.Init( &hUDev, NULL ) == FALSE )
+        {
+            if (m_log) 
+                m_log->Record("Error:InitializeUsb-->get device config descriptor failed.\n" );
+
+            return false;
+        }
+         
+        return true;
+    }                
+
+    LstK_Free( deviceList );
+        
+    /*
     const struct libusb_interface *pInterface;
     const struct libusb_endpoint_descriptor *pEndpointDesc;
     const struct libusb_interface_descriptor *pInterfaceDesc;
@@ -141,7 +189,7 @@ bool CRKUsbComm::InitializeUsb(STRUCT_RKDEVICE_DESC devDesc)
                         }
                         
                         return false;
-                    }
+                    
                     
                     return true;
                 }

@@ -3343,17 +3343,20 @@ void tag_spl(char *tag, char *spl)
     printf("done\n");
     return;
 }
+
 void list_device(CRKScan *pScan)
 {
     STRUCT_RKDEVICE_DESC desc;
     string strDevType;
-    int i,cnt;
-    cnt = pScan->DEVICE_COUNTS;
-    if (cnt == 0) {
+    
+    int cnt = pScan->DEVICE_COUNTS;
+    if (cnt == 0) 
+    {
         printf("not found any devices!\r\n");
         return;
     }
-    for (i=0;i<cnt;i++)
+    
+    for ( int i=0;i<cnt;i++)
     {
         pScan->GetDevice(desc, i);
         if (desc.emUsbType==RKUSB_MASKROM)
@@ -3365,7 +3368,6 @@ void list_device(CRKScan *pScan)
         printf("DevNo=%d\tVid=0x%x,Pid=0x%x,LocationID=%x\t%s\r\n",i+1,desc.usVid,
                desc.usPid,desc.uiLocationID,strDevType.c_str());
     }
-    
 }
 
 
@@ -3774,7 +3776,7 @@ int main(int argc, char* argv[])
 #ifdef DEBUG
     if ( g_pLogObject )
     {
-        g_pLogObject->Record( "rkdevloptool log started.\n" );
+        g_pLogObject->Record( "rkdevloptool debug log started.\n" );
     }
 #endif 
 
@@ -3782,7 +3784,7 @@ int main(int argc, char* argv[])
     {
         if (g_pLogObject) 
         {
-            g_pLogObject->Record("Error: failed to stat config.ini, err=%d", errno);
+            g_pLogObject->Record("Warning: failed to stat config.ini, err=%d", errno);
         }
     } 
     else 

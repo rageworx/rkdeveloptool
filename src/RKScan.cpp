@@ -103,109 +103,11 @@ void CRKScan::AddRockusbVidPid(USHORT newVid, USHORT newPid, USHORT oldVid, USHO
 void CRKScan::SetVidPid(USHORT mscVid, USHORT mscPid)
 {
     STRUCT_DEVICE_CONFIG config;
-    m_deviceConfigSet.clear();
-
-    config.emDeviceType = RK27_DEVICE;
-    config.usPid = 0x3201;
-    config.usVid = 0x071B;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK28_DEVICE;
-    config.usPid = 0x3228;
-    config.usVid = 0x071B;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RKNANO_DEVICE;
-    config.usPid = 0x3226;
-    config.usVid = 0x071B;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RKCROWN_DEVICE;
-    config.usPid = 0x261A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK281X_DEVICE;
-    config.usPid = 0x281A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RKCAYMAN_DEVICE;
-    config.usPid = 0x273A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK29_DEVICE;
-    config.usPid = 0x290A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RKPANDA_DEVICE;
-    config.usPid = 0x282B;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RKSMART_DEVICE;
-    config.usPid = 0x262C;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK292X_DEVICE;
-    config.usPid = 0x292A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK30_DEVICE;
-    config.usPid = 0x300A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK30B_DEVICE;
-    config.usPid = 0x300B;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK31_DEVICE;
-    config.usPid = 0x310B;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK31_DEVICE;
-    config.usPid = 0x310C;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    config.emDeviceType = RK32_DEVICE;
-    config.usPid = 0x320A;
-    config.usVid = 0x2207;
-    m_deviceConfigSet.push_back(config);
-
-    m_deviceMscConfigSet.clear();
-
-    config.emDeviceType = RKNONE_DEVICE;
-    config.usPid = 0x3203;
-    config.usVid = 0x071B;
-    m_deviceMscConfigSet.push_back(config);
-
-    config.emDeviceType = RKNONE_DEVICE;
-    config.usPid = 0x3205;
-    config.usVid = 0x071B;
-    m_deviceMscConfigSet.push_back(config);
-
-    config.emDeviceType = RKNONE_DEVICE;
-    config.usPid = 0x2910;
-    config.usVid = 0x0BB4;
-    m_deviceMscConfigSet.push_back(config);
-
-    config.emDeviceType = RKNONE_DEVICE;
-    config.usPid = 0x0000;
-    config.usVid = 0x2207;
-    m_deviceMscConfigSet.push_back(config);
-
-    config.emDeviceType = RKNONE_DEVICE;
-    config.usPid = 0x0010;
-    config.usVid = 0x2207;
-    m_deviceMscConfigSet.push_back(config);
+    
+    if ( m_deviceConfigSet.size() > 0 )
+    {
+        m_deviceConfigSet.clear();
+    }
 
     if ((mscVid != 0) || (mscPid != 0)) 
     {
@@ -221,44 +123,39 @@ void CRKScan::SetVidPid(USHORT mscVid, USHORT mscPid)
 
 int CRKScan::FindWaitSetPos(const RKDEVICE_CONFIG_SET &waitDeviceSet, USHORT vid, USHORT pid)
 {
-    int pos=-1;
-
     for ( size_t i = 0; i < waitDeviceSet.size(); i++ ) 
     {
         if ( (vid == waitDeviceSet[i].usVid) && (pid == waitDeviceSet[i].usPid) ) 
         {
-            pos = i;
-            break;
+            return (int)i;
         }
     }
     
-    return pos;
+    return -1;
 }
 
 int CRKScan::FindConfigSetPos(RKDEVICE_CONFIG_SET &devConfigSet, USHORT vid, USHORT pid)
 {
-    int pos = -1;
-
     for ( size_t i = 0; i < devConfigSet.size(); i++ ) 
     {
         if ( (vid == devConfigSet[i].usVid) && (pid == devConfigSet[i].usPid) ) 
         {
-            pos = i;
-            break;
+            return (int)i;
         }
     }
     
-    return pos;
+    return -1;
 }
 
 void CRKScan::EnumerateUsbDevice(RKDEVICE_DESC_SET &list, UINT &uiTotalMatchDevices)
 {
-    STRUCT_RKDEVICE_DESC desc;
+    STRUCT_RKDEVICE_DESC    desc;
+    KUSB_DRIVER_API         kusbAPI;
     
     KLST_HANDLE         hDevList = NULL;
     KLST_DEVINFO_HANDLE hDevInfo = NULL;
-    
-    if ( LstK_Init( &hDevList, KLST_FLAG_NONE ) == FALSE )
+        
+    if ( LstK_Init( &hDevList, KLST_FLAG_INCLUDE_DISCONNECT  ) == FALSE )
     {
         if ( m_log )
             m_log->Record( "Error, Lst_Init() failure.\n" );
@@ -289,35 +186,62 @@ void CRKScan::EnumerateUsbDevice(RKDEVICE_DESC_SET &list, UINT &uiTotalMatchDevi
             // Create a new instance for device handling.
             KLST_HANDLE* hDevList = NULL;
             KLST_DEVINFO_HANDLE* hDevInfoNew = NULL;
+
+            desc.emDeviceType   = RKNONE_DEVICE;
+            desc.emUsbType      = RKUSB_NONE;
+            desc.pUsbHandle     = NULL;
+            desc.usbcdUsb       = 0;
+            desc.usVid          = hDevInfo->Common.Vid;
+            desc.usPid          = hDevInfo->Common.Pid;
+            desc.driverID       = hDevInfo->DriverID;
+            desc.uiLocationID   = *(DWORD*)hDevInfo->SerialNumber;
             
-            bool kret = TRUE;
-            /*
-            bool kret = luktk_GetTestDeviceEx( &hDevList, &hDevInfoNew, 
-                                               hDevInfo->Common.Vid,
-                                               hDevInfo->Common.Pid );
+            /* -- old types --
+            desc.uiLocationID   = hDevInfo->BusNumber;
+            desc.uiLocationID <<= 8;
+            desc.uiLocationID  |= 0;            /// DeviceAddress;
             */
-            if ( kret == true )
+            
+            // Get some descriptor from handle --
+            if ( LibK_LoadDriverAPI( &kusbAPI, hDevInfo->DriverID ) == TRUE )
             {
-                desc.emDeviceType   = RKNONE_DEVICE;
-                desc.emUsbType      = RKUSB_NONE;
-                desc.pUsbHandle     = NULL;         /// m_usbkHandle;
-                desc.usbcdUsb       = 0;            /// descriptor.bcdUSB;
-                desc.usVid          = hDevInfo->Common.Vid;
-                desc.usPid          = hDevInfo->Common.Pid;
-                desc.driverID       = hDevInfo->DriverID;
-                desc.uiLocationID   = hDevInfo->Common.MI;
+                USB_DEVICE_DESCRIPTOR deviceDescriptor = {0};
+                KUSB_SETUP_PACKET setupPacket;
                 
-                /*
-                desc.uiLocationID   = hDevInfo->BusNumber;
-                desc.uiLocationID <<= 8;
-                desc.uiLocationID  |= 0;            /// DeviceAddress;
-                */
+                KUSB_HANDLE* pHandle = NULL;
+                if ( kusbAPI.Init( pHandle, hDevInfo ) == FALSE )
+                {
+                    DWORD errorCode = GetLastError();
+                    printf("Open device failed. Win32Error=%u (0x%08X)\n", errorCode, errorCode);
+                    LstK_Free( hDevList );
+                    return;
+                }
                 
-                uiTotalMatchDevices++;
-                list.push_back(desc);
+                desc.pUsbHandle = pHandle;
+                
+                // Setup packets are always 8 bytes (64 bits)
+                *((__int64*)&setupPacket) = 0;                    
+                // Fill the setup packet.
+                setupPacket.BmRequest.Dir       = BMREQUEST_DIR_DEVICE_TO_HOST;
+                setupPacket.BmRequest.Type      = BMREQUEST_TYPE_STANDARD;
+                setupPacket.BmRequest.Recipient = BMREQUEST_RECIPIENT_DEVICE;
+                setupPacket.Value               = USB_DESCRIPTOR_MAKE_TYPE_AND_INDEX(USB_DESCRIPTOR_TYPE_DEVICE, 0);
+                setupPacket.Request             = USB_REQUEST_GET_DESCRIPTOR;
+                setupPacket.Length              = sizeof(deviceDescriptor);
+                BOOL \
+                success = kusbAPI.ControlTransfer( pHandle, 
+                                                   *((WINUSB_SETUP_PACKET*)&setupPacket), 
+                                                   (PUCHAR)&deviceDescriptor, 
+                                                   sizeof(deviceDescriptor), 
+                                                   NULL, NULL );
+                
+                desc.usbcdUsb = deviceDescriptor.bcdUSB;
             }
+                                
+            uiTotalMatchDevices++;
+            list.push_back(desc);
         }
-    }
+    } /// of while()
     
     LstK_Free( hDevList );
 }

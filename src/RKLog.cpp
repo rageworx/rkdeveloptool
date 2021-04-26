@@ -98,7 +98,7 @@ bool CRKLog::Write(string text)
     //localtime_r(&now, &timeNow);
     memcpy( &timeNow, localtime(&now), sizeof( struct tm ) );
 
-    snprintf( szDateTime, 100, "%04d-%02d-%02d-%02d-%02d-%02d.log", 
+    snprintf( szDateTime, 100, "%04d%02d%02d-%02d%02d%02d.log", 
               timeNow.tm_year + 1900, timeNow.tm_mon + 1, timeNow.tm_mday,
               timeNow.tm_hour, timeNow.tm_min, timeNow.tm_sec );
 
