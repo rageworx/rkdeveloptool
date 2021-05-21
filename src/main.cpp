@@ -1,5 +1,5 @@
 /*
- * rkdeveloptool for Windows, MinGW-W64 
+ * rkdeveloptool for Windows, MinGW-W64, libusbk 
  * =======================================================
  * MinGW-W64 revision by
  * (C) 2021 Raphael Kim @ rageworx software
@@ -25,9 +25,13 @@
 #include "RKDevice.h"
 #include "RKImage.h"
 
-extern const char *szManufName[];
-CRKLog *g_pLogObject=NULL;
-CONFIG_ITEM_VECTOR g_ConfigItemVec;
+static KLST_DEVINFO_HANDLE  hDeviceInfo = NULL;
+static KUSB_HANDLE          hUSBK       = NULL;
+static KUSB_DRIVER_API      kUSBAPI = {0};
+
+extern const char*  szManufName[];
+CRKLog*             g_pLogObject    =   NULL;
+CONFIG_ITEM_VECTOR  g_ConfigItemVec;
 
 // MinGW-W64, MSYS2 may not use escape charactors for Windows console.
 #ifdef __MINGW32__
@@ -55,10 +59,6 @@ CONFIG_ITEM_VECTOR g_ConfigItemVec;
 
 #define STDOUTFLUSH                     fflush(stdout)
 
-#ifdef _WIN32
-    #define INTERNAL_VERSION            PACKAGE_VERSION".2.14"
-#endif /// of _WIN32
-
 extern UINT CRC_32(unsigned char* pData, UINT ulSize);
 extern unsigned short CRC_16(unsigned char* aData, UINT aSize);
 extern void P_RC4(unsigned char* buf, unsigned short len);
@@ -82,9 +82,9 @@ void usage()
     printf("ListDevice:\t\tld\r\n");
     printf("DownloadBoot:\t\tdb <Loader>\r\n");
     printf("UpgradeLoader:\t\tul <Loader>\r\n");
-    printf("ReadLBA:\t\trl  <BeginSec> <SectorLen> <File>\r\n");
-    printf("WriteLBA:\t\twl  <BeginSec> <File>\r\n");
-    printf("WriteLBA:\t\twlx  <PartitionName> <File>\r\n");
+    printf("ReadLBA:\t\trl <BeginSec> <SectorLen> <File>\r\n");
+    printf("WriteLBA:\t\twl <BeginSec> <File>\r\n");
+    printf("WriteLBA:\t\twlx <PartitionName> <File>\r\n");
     printf("WriteGPT:\t\tgpt <gpt partition table>\r\n");
     printf("WriteParameter:\t\tprm <parameter>\r\n");
     printf("PrintPartition:\t\tppt \r\n");
@@ -3271,7 +3271,9 @@ void split_item(STRING_VECTOR &vecItems, char *pszItems)
     char *pos = NULL, *pStart;
     pStart = pszItems;
     pos = strchr(pStart, ',');
-    while(pos != NULL) {
+
+    while(pos != NULL) 
+    {
         memset(szItem, 0, sizeof(szItem));
         strncpy(szItem, pStart, pos - pStart);
         strItem = szItem;
@@ -3281,7 +3283,9 @@ void split_item(STRING_VECTOR &vecItems, char *pszItems)
             break;
         pos = strchr(pStart, ',');
     }
-    if (strlen(pStart) > 0) {
+    
+    if (strlen(pStart) > 0) 
+    {
         memset(szItem, 0, sizeof(szItem));
         strncpy(szItem, pStart, sizeof(szItem)-1);
         strItem = szItem;
@@ -3291,32 +3295,35 @@ void split_item(STRING_VECTOR &vecItems, char *pszItems)
 
 void tag_spl(char *tag, char *spl)
 {
-    FILE *file = NULL;
-    int len;
-
     if(!tag || !spl)
         return;
-    len = strlen(tag);
+    
+    int len = strlen(tag);
     printf("tag len=%d\n",len);
-    file = fopen(spl, "rb");
-    if( !file ){
+    FILE* file = fopen(spl, "rb");
+    if( !file )
+    {
         return;
     }
+
     int iFileSize;
     fseek(file, 0, SEEK_END);
     iFileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
-    char *Buf = NULL;
-    Buf = new char[iFileSize + len + 1];
-    if (!Buf){
+    
+    char *Buf = new char[iFileSize + len + 1];
+    if (!Buf)
+    {
         fclose(file);
         return;
     }
+    
     memset(Buf, 0, iFileSize + 1);
     memcpy(Buf, tag, len);
-    int iRead;
-    iRead = fread(Buf+len, 1, iFileSize, file);
-    if (iRead != iFileSize){
+    
+    int iRead = fread(Buf+len, 1, iFileSize, file);
+    if (iRead != iFileSize)
+    {
         fclose(file);
         delete []Buf;
         return;
@@ -3328,32 +3335,40 @@ void tag_spl(char *tag, char *spl)
     strcpy(taggedspl, spl);
     strcpy(taggedspl + len, ".tag");
     taggedspl[len+4] = 0;
+    
     printf("Writing tagged spl to %s\n", taggedspl);
 
     file = fopen(taggedspl, "wb");
-    if( !file ){
+    if( !file )
+    {
         delete []taggedspl;
         delete []Buf;
         return;
     }
+    
     fwrite(Buf, 1, iFileSize+len, file);
     fclose(file);
+    
     delete []taggedspl;
     delete []Buf;
+    
     printf("done\n");
     return;
 }
+
 void list_device(CRKScan *pScan)
 {
     STRUCT_RKDEVICE_DESC desc;
     string strDevType;
-    int i,cnt;
-    cnt = pScan->DEVICE_COUNTS;
-    if (cnt == 0) {
+    
+    int cnt = pScan->DEVICE_COUNTS;
+    if (cnt == 0) 
+    {
         printf("not found any devices!\r\n");
         return;
     }
-    for (i=0;i<cnt;i++)
+    
+    for ( int i=0;i<cnt;i++)
     {
         pScan->GetDevice(desc, i);
         if (desc.emUsbType==RKUSB_MASKROM)
@@ -3362,21 +3377,21 @@ void list_device(CRKScan *pScan)
             strDevType = "Loader";
         else
             strDevType = "Unknown";
-        printf("DevNo=%d\tVid=0x%x,Pid=0x%x,LocationID=%x\t%s\r\n",i+1,desc.usVid,
+        
+        printf("DevNo=%d\tVid=0x%x,Pid=0x%x,LocationID=%08X\t%s\r\n",i+1,desc.usVid,
                desc.usPid,desc.uiLocationID,strDevType.c_str());
     }
-    
 }
 
 
 bool handle_command(int argc, char* argv[], CRKScan *pScan)
 {
-    string strCmd;
-    strCmd = argv[1];
+    string  strCmd = argv[1];
     ssize_t cnt;
-    bool bRet,bSuccess = false;
-    char *s;
-    int ret;
+    bool    bRet = false;
+    bool    bSuccess = false;
+    int     ret;
+    
     STRUCT_RKDEVICE_DESC dev;
     u8 master_gpt[34 * SECTOR_SIZE] = {0};
     u8 param_buffer[512 * SECTOR_SIZE] = {0};
@@ -3384,7 +3399,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     u32 part_size, part_offset;
 
     transform(strCmd.begin(), strCmd.end(), strCmd.begin(), (int(*)(int))toupper);
-    s = (char*)strCmd.c_str();
+    char* s = (char*)strCmd.c_str();
     
     for( size_t i = 0; i < (int)strlen(s); i++)
     {
@@ -3400,8 +3415,8 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     if((strcmp(strCmd.c_str(), "-V") == 0) || (strcmp(strCmd.c_str(), "--VERSION") == 0)) 
     {
 #ifdef _WIN32
-        printf( "rkdeveloptool ver %s(%s)-win32\r\n", 
-                PACKAGE_VERSION, INTERNAL_VERSION );
+        printf( "%s ver %s(%s)\r\n", 
+                APP_PACKAGE_NAME, PACKAGE_VERSION, APP_VERSION_STR );
 #else
         printf("rkdeveloptool ver %s\r\n", PACKAGE_VERSION);
 #endif /// of _WIN32
@@ -3507,17 +3522,35 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                 }
             }            
         }
-    } else if(strcmp(strCmd.c_str(), "TD") == 0) {
+    } 
+    else 
+    if(strcmp(strCmd.c_str(), "TD") == 0) 
+    {
         bSuccess = test_device(dev);
-    } else if (strcmp(strCmd.c_str(), "RID") == 0) {//Read Flash ID
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RID") == 0) 
+    {//Read Flash ID
         bSuccess = read_flash_id(dev);
-    } else if (strcmp(strCmd.c_str(), "RFI") == 0){//Read Flash Info
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RFI") == 0)
+    {//Read Flash Info
         bSuccess = read_flash_info(dev);
-    } else if (strcmp(strCmd.c_str(), "RCI") == 0) {//Read Chip Info
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RCI") == 0) 
+    {//Read Chip Info
         bSuccess = read_chip_info(dev);
-    } else if (strcmp(strCmd.c_str(), "RCB") == 0) {//Read Capability
+    } 
+    else 
+    if (strcmp(strCmd.c_str(), "RCB") == 0) 
+    {//Read Capability
         bSuccess = read_capability(dev);
-    } else if(strcmp(strCmd.c_str(), "DB") == 0) {
+    } 
+    else 
+    if(strcmp(strCmd.c_str(), "DB") == 0) 
+    {
         if (argc > 2) {
             string strLoader;
             strLoader = argv[2];
@@ -3687,14 +3720,20 @@ void sighandler(int sig)
     sigproc = true;
     
     char prtbuff[512] = {0};
-    snprintf( prtbuff, 512, "Signal trapped : %d\n", sig );
-    write( 1, prtbuff, strlen( prtbuff ) );
-    //printf( "%s", prtbuff );
+    snprintf( prtbuff, 512, "Error : signal trapped = %d\n", sig );
 
-    if (g_pLogObject)
+    if ( g_pLogObject )
+    {
+        g_pLogObject->Record( prtbuff );
         delete g_pLogObject;
+    }
 
-    libusb_exit(NULL);
+    write( 1, prtbuff, strlen( prtbuff ) );
+
+    if ( hUSBK != NULL )
+    {
+        UsbK_Free( hUSBK );
+    }
     
     sigproc = false;
     exit(0);
@@ -3704,14 +3743,13 @@ int main(int argc, char* argv[])
 {
     // set up signal handler  --
     signal( SIGSEGV, sighandler );
-    signal( SIGINT, sighandler );
     // --------------------------
 
-    CRKScan *pScan = NULL;
-    int ret;
-    char szProgramProcPath[100] = {0};
-    char szProgramDir[256] = {0};
-    string strLogDir,strConfigFile;
+    CRKScan*    pScan = NULL;
+    int         ret;
+    char        szProgramProcPath[100] = {0};
+    char        szProgramDir[256] = {0};
+    string      strLogDir,strConfigFile;
     struct stat statBuf = {0};
 
     g_ConfigItemVec.clear();
@@ -3737,7 +3775,7 @@ int main(int argc, char* argv[])
     strConfigFile = szProgramDir;
     strConfigFile += "/config.ini";
 
-#ifndef _WIN32    
+#ifndef _WIN32 
     if (opendir(strLogDir.c_str()) == NULL)
         mkdir(strLogDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);
 #else
@@ -3751,7 +3789,7 @@ int main(int argc, char* argv[])
 #ifdef DEBUG
     if ( g_pLogObject )
     {
-        g_pLogObject->Record( "rkdevloptool log started.\n" );
+        g_pLogObject->Record( "rkdevloptool debug log started.\n" );
     }
 #endif 
 
@@ -3759,7 +3797,7 @@ int main(int argc, char* argv[])
     {
         if (g_pLogObject) 
         {
-            g_pLogObject->Record("Error: failed to stat config.ini, err=%d", errno);
+            g_pLogObject->Record("Warning: failed to stat config.ini, err=%d", errno);
         }
     } 
     else 
@@ -3768,18 +3806,25 @@ int main(int argc, char* argv[])
         parse_config_file(strConfigFile.c_str(), g_ConfigItemVec);
     }
 
-    ret = libusb_init(NULL);
-    if (ret < 0) 
+    /* --- libusk dosen't initialize as global  ---
+    
+    if ( g_pLogObject )
+    {
+        g_pLogObject->Record( "Initializing libusbk ..." );
+    }
+    
+    if ( UsbK_Init( &hUSBK, NULL ) == FALSE )
     {
         if (g_pLogObject) 
         {
-            g_pLogObject->Record("Error: libusb_init failed, err=%d", ret);
+            g_pLogObject->Record("Error: UsbK_Init() failed, code = %08X", GetLastError() );
             delete g_pLogObject;
         }
         return -1;
     }
-
-    pScan = new CRKScan();
+    */
+    
+    pScan = new CRKScan( (void*)hUSBK );
     if (!pScan) 
     {
         if (g_pLogObject) 
@@ -3787,14 +3832,21 @@ int main(int argc, char* argv[])
             g_pLogObject->Record("Error: failed to create object for searching device");
             delete g_pLogObject;
         }
-        libusb_exit(NULL);
+
+        if ( hUSBK != NULL )
+        {
+            UsbK_Free( hUSBK );
+        } 
+        
         return -2;
     }
     
     pScan->SetVidPid();
 
     if (argc == 1)
+    {
         usage();
+    }
     else 
     if ( handle_command(argc, argv, pScan) )
     {
@@ -3812,7 +3864,10 @@ int main(int argc, char* argv[])
     if (g_pLogObject)
         delete g_pLogObject;
 
-    libusb_exit(NULL);
+    if ( hUSBK != NULL )
+    {
+        KUSB_Free( hUSBK );
+    }
 
     return 0;
 }

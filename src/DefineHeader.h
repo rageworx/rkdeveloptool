@@ -1,18 +1,23 @@
 #ifndef DEFINE_HEADER
 #define DEFINE_HEADER
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstring>
+
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
 #include <unistd.h>
-//	#include <iconv.h>
+
+#ifdef _WIN32
+    #include <windows.h>
+#endif 
 #include <wchar.h>
 #include <errno.h>
 #include <pthread.h>
-#include <libusb.h>
+#include <libusbk.h>
 
 #include "Property.hpp"
 #include <list>
@@ -21,15 +26,19 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+
 using namespace std;
+
+/* minGW-W64 already defined these types */
 #ifndef _WIN32
-typedef unsigned char BYTE, *PBYTE;
-typedef unsigned char UCHAR;
-typedef unsigned short WCHAR;
-typedef unsigned short USHORT;
-typedef unsigned int	UINT;
-typedef unsigned int	DWORD;
+    typedef unsigned char   BYTE, *PBYTE;
+    typedef unsigned char   UCHAR;
+    typedef unsigned short  WCHAR;
+    typedef unsigned short  USHORT;
+    typedef unsigned int	UINT;
+    typedef unsigned int	DWORD;
 #endif /// of _WIN32
+
 #define ALIGN(x, a)		__ALIGN_MASK((x), (a) - 1)
 #define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
 #define RK28_SEC2_RESERVED_LEN 473
@@ -41,6 +50,7 @@ typedef unsigned int	DWORD;
 #define RKDEVICE_WIFI_LEN 6
 #define RKDEVICE_BT_LEN 6
 #define RKDEVICE_IMEI_LEN 15
+
 typedef enum{
 	RKNONE_DEVICE = 0,
 	RK27_DEVICE = 0x10,
@@ -58,6 +68,7 @@ typedef enum{
 	RK31_DEVICE = 0x70,
 	RK32_DEVICE = 0x80
 } ENUM_RKDEVICE_TYPE;
+
 typedef enum{
 	RK_OS = 0,
 	ANDROID_OS = 0x1
@@ -69,6 +80,7 @@ typedef enum{
 	RKUSB_LOADER = 0x02,
 	RKUSB_MSC = 0x04
 } ENUM_RKUSB_TYPE;
+
 typedef enum{
 	ENTRY471 = 1,
 	ENTRY472 = 2,
@@ -89,12 +101,14 @@ typedef struct sparse_header_t {
 							/* as 0. Standard 802.3 polynomial, use a Public Domain */
 							/* table implementation */
 } sparse_header;
+
 #define SPARSE_HEADER_MAGIC	0xed26ff3a
 #define UBI_HEADER_MAGIC	0x23494255
 #define CHUNK_TYPE_RAW		0xCAC1
 #define CHUNK_TYPE_FILL		0xCAC2
 #define CHUNK_TYPE_DONT_CARE	0xCAC3
 #define CHUNK_TYPE_CRC32    0xCAC4
+
 typedef struct chunk_header_t {  
 	USHORT	chunk_type;	/* 0xCAC1 -> raw; 0xCAC2 -> fill; 0xCAC3 -> don't care */
 	USHORT	reserved1;
@@ -115,21 +129,26 @@ typedef struct{
 	char szItemName[20];
 	char szItemValue[256];
 } STRUCT_CONFIG_ITEM, *PSTRUCT_CONFIG_ITEM;
+
 typedef struct
 {
 	char szItemName[64];
 	UINT uiItemOffset;
 	UINT uiItemSize;
 }STRUCT_PARAM_ITEM,*PSTRUCT_PARAM_ITEM;
-typedef struct _STRUCT_RKDEVICE_DESC{
-	USHORT usVid;
-	USHORT usPid;
-	USHORT usbcdUsb;
-	UINT     uiLocationID;
-	ENUM_RKUSB_TYPE emUsbType;
-	ENUM_RKDEVICE_TYPE emDeviceType;
-	void   *pUsbHandle;
+
+typedef struct _STRUCT_RKDEVICE_DESC
+{
+	USHORT              usVid;
+	USHORT              usPid;
+	USHORT              usbcdUsb;
+	UINT                uiLocationID;
+    INT                 driverID;
+	ENUM_RKUSB_TYPE     emUsbType;
+	ENUM_RKDEVICE_TYPE  emDeviceType;
+	void*               pUsbHandle;
 } STRUCT_RKDEVICE_DESC, *PSTRUCT_RKDEVICE_DESC;
+
 typedef	struct {
 	DWORD	dwTag;
 	BYTE	reserved[4];
@@ -206,13 +225,16 @@ typedef struct {
 	BYTE	macSize;
 	BYTE	macAddr[RKDEVICE_MAC_LEN];
 } RK28_IDB_SEC3, *PRK28_IDB_SEC3;
+
 #pragma pack()
+
 typedef list<STRUCT_RKDEVICE_DESC> RKDEVICE_DESC_SET;
 typedef RKDEVICE_DESC_SET::iterator device_list_iter;
 typedef vector<string> STRING_VECTOR;
 typedef vector<UINT> UINT_VECTOR;
 typedef vector<STRUCT_CONFIG_ITEM> CONFIG_ITEM_VECTOR;
 typedef vector<STRUCT_PARAM_ITEM> PARAM_ITEM_VECTOR;
+
 typedef enum{
 	TESTDEVICE_PROGRESS,
 	DOWNLOADIMAGE_PROGRESS,
@@ -233,6 +255,4 @@ typedef enum{
 
 typedef void (*ProgressPromptCB)(DWORD deviceLayer, ENUM_PROGRESS_PROMPT promptID, long long totalValue, long long currentValue, ENUM_CALL_STEP emCall);
 
-//	bool WideStringToString(wchar_t *pszSrc, char *&pszDest);
-//	bool StringToWideString(char *pszSrc, wchar_t *&pszDest);
 #endif

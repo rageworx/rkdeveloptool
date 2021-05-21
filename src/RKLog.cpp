@@ -54,7 +54,8 @@ CRKLog::CRKLog(string logFilePath, string logFileName, bool enable)
     } 
     else 
     {
-        if (logFilePath[logFilePath.size() - 1] != '/') {
+        if (logFilePath[logFilePath.size() - 1] != '/') 
+        {
             logFilePath += '/';
         }
         m_path = logFilePath;
@@ -89,25 +90,25 @@ void CRKLog::Record(const char *lpFmt,...)
 
 bool CRKLog::Write(string text)
 {
-    time_t  now;
-    struct tm timeNow;
-    char szDateTime[100];
-    string  strName;
-    FILE *file=NULL;
+    time_t      now;
+    struct tm   timeNow;
+    char        szDateTime[100] = {0};
+    
     time(&now);
     //localtime_r(&now, &timeNow);
     memcpy( &timeNow, localtime(&now), sizeof( struct tm ) );
 
-    snprintf( szDateTime, 100, "%04d-%02d-%02d-%02d-%02d-%02d.log", 
+    snprintf( szDateTime, 100, "%04d%02d%02d-%02d%02d%02d.log", 
               timeNow.tm_year + 1900, timeNow.tm_mon + 1, timeNow.tm_mday,
               timeNow.tm_hour, timeNow.tm_min, timeNow.tm_sec );
 
-    strName = m_path + m_name+szDateTime;
+    string strName = m_path + m_name+szDateTime;
 
+    FILE* file = NULL;
+    
     try 
     {
         file = fopen(strName.c_str(), "ab+");
-        
         if (!file) 
         {
             return false;
@@ -128,11 +129,10 @@ bool CRKLog::Write(string text)
 }
 bool CRKLog::SaveBuffer(string fileName, PBYTE lpBuffer, DWORD dwSize)
 {
-    FILE *file;
-    file = fopen(fileName.c_str(), "wb+");
-    if (!file) {
+    FILE* file = fopen(fileName.c_str(), "wb+");
+    if (!file) 
         return false;
-    }
+
     fwrite(lpBuffer, 1, dwSize, file);
     fclose(file);
     return true;
@@ -140,12 +140,15 @@ bool CRKLog::SaveBuffer(string fileName, PBYTE lpBuffer, DWORD dwSize)
 
 void CRKLog::PrintBuffer(string &strOutput, PBYTE lpBuffer, DWORD dwSize, UINT uiLineCount)
 {
-    UINT i,count;
-    char strHex[32];
-    strOutput = "";
-    for (i = 0, count = 0; i < dwSize; i++, count++) 
+    if ( strOutput.size() > 0 )
+        strOutput.clear();
+    
+    DWORD count = 0;
+    
+    for ( DWORD i = 0, count = 0; i < dwSize; i++, count++) 
     {
-        sprintf(strHex, "%X", lpBuffer[i]);
+        char strHex[3] = {0};
+        snprintf( strHex, 3, "%02X", lpBuffer[i]);
         strOutput = strOutput + " " + strHex;
         if (count >= uiLineCount) 
         {

@@ -125,70 +125,71 @@ string CRKDevice::GetLayerString(DWORD dwLocationID)
 }
 
 CRKDevice::CRKDevice(STRUCT_RKDEVICE_DESC &device)
+  : m_vid( device.usVid ),
+    m_pid( device.usPid ),
+    m_usb( device.emUsbType ),
+    m_device( device.emDeviceType ),
+    m_bcdUsb( device.usbcdUsb ),
+    m_locationID( device.uiLocationID ),
+    m_callBackProc( NULL ),
+    m_chipData( NULL ),
+    m_pImage( NULL ),
+    m_pLog( NULL ),
+    m_pComm( NULL ),
+    m_pFlashInfoData( NULL ),
+    m_usFlashInfoDataLen( 0 ),
+    m_usFlashInfoDataOffset( 0 ),
+    m_bEmmc( false ),
+    m_bDirectLba( false ),
+    m_bFirst4mAccess( false )
 {
     VendorID.setContainer(this);
-        VendorID.getter(&CRKDevice::GetVendorID);
+    VendorID.getter(&CRKDevice::GetVendorID);
     VendorID.setter(&CRKDevice::SetVendorID);
 
     ProductID.setContainer(this);
-        ProductID.getter(&CRKDevice::GetProductID);
+    ProductID.getter(&CRKDevice::GetProductID);
     ProductID.setter(&CRKDevice::SetProductID);
 
     DeviceType.setContainer(this);
-        DeviceType.getter(&CRKDevice::GetDeviceType);
+    DeviceType.getter(&CRKDevice::GetDeviceType);
     DeviceType.setter(&CRKDevice::SetDeviceType);
 
     UsbType.setContainer(this);
-        UsbType.getter(&CRKDevice::GetUsbType);
+    UsbType.getter(&CRKDevice::GetUsbType);
     UsbType.setter(&CRKDevice::SetUsbType);
 
     LayerName.setContainer(this);
-        LayerName.getter(&CRKDevice::GetLayerName);
+    LayerName.getter(&CRKDevice::GetLayerName);
     LayerName.setter(&CRKDevice::SetLayerName);
 
     BcdUsb.setContainer(this);
-        BcdUsb.getter(&CRKDevice::GetBcdUsb);
+    BcdUsb.getter(&CRKDevice::GetBcdUsb);
     BcdUsb.setter(&CRKDevice::SetBcdUsb);
 
     LocationID.setContainer(this);
-        LocationID.getter(&CRKDevice::GetLocationID);
+    LocationID.getter(&CRKDevice::GetLocationID);
     LocationID.setter(&CRKDevice::SetLocationID);
 
     OsType.setContainer(this);
-        OsType.getter(&CRKDevice::GetOsType);
+    OsType.getter(&CRKDevice::GetOsType);
     OsType.setter(&CRKDevice::SetOsType);
 
     LogObjectPointer.setContainer(this);
-        LogObjectPointer.getter(&CRKDevice::GetLogObjectPointer);
+    LogObjectPointer.getter(&CRKDevice::GetLogObjectPointer);
 
     CommObjectPointer.setContainer(this);
-        CommObjectPointer.getter(&CRKDevice::GetCommObjectPointer);
+    CommObjectPointer.getter(&CRKDevice::GetCommObjectPointer);
 
     CallBackPointer.setContainer(this);
     CallBackPointer.setter(&CRKDevice::SetCallBackPointer);
 
-    m_vid = device.usVid;
-    m_pid = device.usPid;
-    m_usb = device.emUsbType;
-    m_device = device.emDeviceType;
-    m_bcdUsb = device.usbcdUsb;
-    m_locationID = device.uiLocationID;
     strcpy(m_layerName, GetLayerString(m_locationID).c_str());
 
     memset(m_flashInfo.blockState, 0, IDBLOCK_TOP);
+
     m_flashInfo.usPhyBlokcPerIDB = 1;
     m_flashInfo.uiSecNumPerIDB = 0;
-    m_callBackProc = NULL;
-    m_chipData = NULL;
-    m_pImage = NULL;
-    m_pLog = NULL;
-    m_pComm = NULL;
-    m_pFlashInfoData = NULL;
-    m_usFlashInfoDataLen = 0;
-    m_usFlashInfoDataOffset = 0;
-    m_bEmmc = false;
-    m_bDirectLba = false;
-    m_bFirst4mAccess = false;
 }
 
 CRKDevice::~CRKDevice()

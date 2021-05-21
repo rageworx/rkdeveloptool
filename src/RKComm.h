@@ -1,11 +1,13 @@
 #ifndef RKCOMM_HEADER
 #define RKCOMM_HEADER
 #include "DefineHeader.h"
+
 typedef enum {
         USB_BULK_READ = 0,
         USB_BULK_WRITE,
         USB_CONTROL,
 } USB_ACCESS_TYPE;
+
 typedef enum {
     TU_NONE_SUBCODE = 0,
     TU_ERASESYSTEM_SUBCODE = 0xFE,
@@ -13,6 +15,7 @@ typedef enum {
     TU_ERASEUSERDATA_SUBCODE = 0xFB,
     TU_GETUSERSECTOR_SUBCODE = 0xF9
 } TESTUNIT_SUBCODE;
+
 typedef enum{
     RST_NONE_SUBCODE = 0,
     RST_RESETMSC_SUBCODE,
@@ -20,6 +23,7 @@ typedef enum{
     RST_RESETMASKROM_SUBCODE,
     RST_DISCONNECTRESET_SUBCODE
 } RESET_SUBCODE;
+
 typedef enum{
     RWMETHOD_IMAGE = 0,
     RWMETHOD_LBA
@@ -163,10 +167,14 @@ class CRKUsbComm:public CRKComm
         virtual int RKU_EraseLBA(DWORD dwPos,DWORD dwCount);
         
     private:
-        void *m_pUsbHandle;
-        unsigned char m_pipeBulkIn;
-        unsigned char m_pipeBulkOut;
-        int m_interfaceNum;
+        void*           m_pUsbAPI;
+        void*           m_pUsbHandle;
+        void*           m_pStrmHandle;
+        unsigned char   m_pipeBulkIn;
+        unsigned char   m_pipeBulkOut;
+        int             m_interfaceNum;
+
+    private:
         virtual bool RKU_Write(BYTE *lpBuffer, DWORD dwSize);
         virtual bool RKU_Read(BYTE *lpBuffer, DWORD dwSize);
         bool InitializeUsb(STRUCT_RKDEVICE_DESC devDesc);
