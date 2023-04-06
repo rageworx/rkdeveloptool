@@ -1,8 +1,8 @@
 /*
- * rkdeveloptool for Windows, MinGW-W64 
+ * rkdeveloptool for Windows, MinGW-W64
  * =======================================================
  * MinGW-W64 revision by
- * (C) 2021 Raphael Kim @ rageworx software
+ * (C) 2021,2023 Raphael Kim @ rageworx software
  * ----
  * (C) Copyright 2017 Fuzhou Rockchip Electronics Co., Ltd
  * Seth Liu 2017.03.01
@@ -12,7 +12,8 @@
 
 #include <unistd.h>
 #include <dirent.h>
-#include <signal.h>
+
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 
@@ -26,7 +27,8 @@
 #include "RKImage.h"
 
 extern const char *szManufName[];
-CRKLog *g_pLogObject=NULL;
+
+CRKLog *g_pLogObject = NULL;
 CONFIG_ITEM_VECTOR g_ConfigItemVec;
 
 // MinGW-W64, MSYS2 may not use escape charactors for Windows console.
@@ -51,7 +53,7 @@ CONFIG_ITEM_VECTOR g_ConfigItemVec;
     #define CURSOR_CLEAR_SCREEN         printf("%c[2J", 0x1B)
     #define ERROR_COLOR_ATTR            printf("%c[30;41m", 0x1B);
     #define NORMAL_COLOR_ATTR           printf("%c[0m", 0x1B);
-#endif 
+#endif
 
 #define STDOUTFLUSH                     fflush(stdout)
 
@@ -103,75 +105,75 @@ void usage()
 }
 void ProgressInfoProc(DWORD deviceLayer, ENUM_PROGRESS_PROMPT promptID, long long totalValue, long long currentValue, ENUM_CALL_STEP emCall)
 {
-    string strInfoText;   
+    string strInfoText;
     char szText[256] = {0};
-    
-    switch (promptID) 
+
+    switch (promptID)
     {
         case TESTDEVICE_PROGRESS:
             snprintf( szText, 256,
                       "Test Device total %lld, current %lld", totalValue, currentValue);
             strInfoText = szText;
             break;
-            
+
         case LOWERFORMAT_PROGRESS:
             snprintf( szText, 256,
                       "Lowerformat Device total %lld, current %lld", totalValue, currentValue);
             strInfoText = szText;
             break;
-            
+
         case DOWNLOADIMAGE_PROGRESS:
             snprintf( szText, 256,
                       "Download Image total %lldK, current %lldK", totalValue/1024, currentValue/1024);
             strInfoText = szText;
             break;
-            
+
         case CHECKIMAGE_PROGRESS:
             snprintf( szText, 256,
                       "Check Image total %lldK, current %lldK", totalValue/1024, currentValue/1024);
             strInfoText = szText;
             break;
-            
+
         case TAGBADBLOCK_PROGRESS:
-            snprintf( szText, 256, 
+            snprintf( szText, 256,
                       "Tag Bad Block total %lld, current %lld", totalValue, currentValue);
             strInfoText = szText;
             break;
         case TESTBLOCK_PROGRESS:
-            snprintf( szText,256, 
+            snprintf( szText,256,
                        "Test Block total %lld, current %lld", totalValue, currentValue);
             strInfoText = szText;
             break;
-            
+
         case ERASEFLASH_PROGRESS:
-            snprintf( szText, 256, 
+            snprintf( szText, 256,
                       "Erase Flash total %lld, current %lld", totalValue, currentValue);
             strInfoText = szText;
             break;
-            
+
         case ERASESYSTEM_PROGRESS:
-            snprintf( szText, 256, 
+            snprintf( szText, 256,
                       "Erase System partition total %lld, current %lld", totalValue, currentValue);
             strInfoText = szText;
             break;
-            
+
         case ERASEUSERDATA_PROGRESS:
-            snprintf( szText, 256, 
+            snprintf( szText, 256,
                       "<LocationID=%lx> Erase Userdata partition total %lld, current %lld", deviceLayer, totalValue, currentValue);
             strInfoText = szText;
             break;
     }
-    
+
     if (strInfoText.size() > 0)
     {
         CURSOR_MOVEUP_LINE(1);
         CURSOR_DEL_LINE;
         printf("%s\r\n", strInfoText.c_str());
     }
-    
+
     if (emCall == CALL_LAST)
         deviceLayer = 0;
-    
+
     STDOUTFLUSH;
 }
 
@@ -180,7 +182,7 @@ char *strupr( char *szSrc )
     if( szSrc )
     {
         char *p = szSrc;
-        
+
         while(*p)
         {
             if ((*p >= 'a') && (*p <= 'z'))
@@ -188,7 +190,7 @@ char *strupr( char *szSrc )
             p++;
         }
     }
-    
+
     return szSrc;
 }
 
@@ -205,11 +207,11 @@ void PrintData(PBYTE pData, int nSize)
                 printf("     %s\r\n", szPrint);
             printf("%08d ", i / 16);
         }
-        
+
         printf("%02X ", pData[i]);
         szPrint[i%16] = isprint(pData[i]) ? pData[i] : '.';
     }
-    
+
     if(i / 16 > 0)
         printf("     %s\r\n", szPrint);
 
@@ -232,34 +234,32 @@ void string_to_uuid(string strUUid, char *uuid)
 {
     if ( uuid == NULL )
         return;
-    
+
     char value;
     memset(uuid, 0, 16);
 
-    for ( size_t i =0; i < strUUid.size(); i++) 
+    for ( size_t i =0; i < strUUid.size(); i++)
     {
         value = 0;
-        
+
         if ((strUUid[i] >= '0')&&(strUUid[i] <= '9'))
             value = strUUid[i] - '0';
-        
+
         if ((strUUid[i] >= 'a')&&(strUUid[i] <= 'f'))
             value = strUUid[i] - 'a' + 10;
-        
+
         if ((strUUid[i] >= 'A')&&(strUUid[i] <= 'F'))
             value = strUUid[i] - 'A' + 10;
-        
+
         if ((i % 2) == 0)
             uuid[i / 2] += (value << 4);
         else
             uuid[i / 2] += value;
     }
-    
-    unsigned int *p32;
-    unsigned short *p16;
-    p32 = (unsigned int*)uuid;
+
+    UINT32 *p32 = (UINT32*)uuid;
+    UINT16 *p16 = (UINT16*)(uuid + 4);
     *p32 = cpu_to_be32(*p32);
-    p16 = (unsigned short *)(uuid + 4);
     *p16 = cpu_to_be16(*p16);
     p16 = (unsigned short *)(uuid + 6);
     *p16 = cpu_to_be16(*p16);
@@ -272,35 +272,35 @@ bool parse_config(char *pConfig, CONFIG_ITEM_VECTOR &vecItem)
     string::size_type line_size,pos;
     STRUCT_CONFIG_ITEM item;
     vecItem.clear();
-    
-    while (!configStream.eof())
+
+    while ( !configStream.eof() )
     {
         getline(configStream, strLine);
         line_size = strLine.size();
-        
+
         if (line_size > 0)
         {
             if (strLine[line_size-1] == '\r')
             {
                 strLine = strLine.substr(0, line_size-1);
             }
-            
+
             strLine.erase(0, strLine.find_first_not_of(" "));
             strLine.erase(strLine.find_last_not_of(" ") + 1);
-            
+
             if ( (strLine.size() > 0 ) && (strLine[0] != '#')  )
             {
                 pos = strLine.find("=");
-                
+
                 if (pos != string::npos)
-                {            
+                {
                     strItemName = strLine.substr(0, pos);
                     strItemValue = strLine.substr(pos + 1);
                     strItemName.erase(0, strItemName.find_first_not_of(" "));
                     strItemName.erase(strItemName.find_last_not_of(" ") + 1);
                     strItemValue.erase(0, strItemValue.find_first_not_of(" "));
                     strItemValue.erase(strItemValue.find_last_not_of(" ") + 1);
-                    
+
                     if ((strItemName.size() > 0) && (strItemValue.size() > 0))
                     {
                         strcpy(item.szItemName, strItemName.c_str());
@@ -311,7 +311,7 @@ bool parse_config(char *pConfig, CONFIG_ITEM_VECTOR &vecItem)
             }
         }
     } /// of wuile() --
-    
+
     return true;
 }
 
@@ -326,7 +326,8 @@ bool parse_config_file(const char *pConfigFile, CONFIG_ITEM_VECTOR &vecItem)
         return false;
     }
 
-    int iFileSize;
+    int iFileSize = 0;
+
     fseek(file, 0, SEEK_END);
     iFileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
@@ -338,9 +339,11 @@ bool parse_config_file(const char *pConfigFile, CONFIG_ITEM_VECTOR &vecItem)
         fclose(file);
         return false;
     }
-    
+
     memset(pConfigBuf, 0, iFileSize + 1);
+
     int iRead = fread(pConfigBuf, 1, iFileSize, file);
+
     if (iRead != iFileSize)
     {
         if (g_pLogObject)
@@ -349,8 +352,9 @@ bool parse_config_file(const char *pConfigFile, CONFIG_ITEM_VECTOR &vecItem)
         delete [] pConfigBuf;
         return false;
     }
+
     fclose(file);
-    
+
     bool bRet = parse_config(pConfigBuf, vecItem);
     delete [] pConfigBuf;
     return bRet;
@@ -359,35 +363,36 @@ bool parse_config_file(const char *pConfigFile, CONFIG_ITEM_VECTOR &vecItem)
 bool ParsePartitionInfo(string &strPartInfo, string &strName, UINT &uiOffset, UINT &uiLen)
 {
     string::size_type pos,prevPos;
-    string strOffset,strLen;
+    string strOffset;
+    string strLen;
     int iCount;
     prevPos = pos = 0;
-    
-    if (strPartInfo.size() <= 0) 
+
+    if (strPartInfo.size() <= 0)
     {
         return false;
     }
-    
+
     pos = strPartInfo.find('@');
-    
-    if (pos == string::npos) 
+
+    if (pos == string::npos)
     {
         return false;
     }
-    
+
     strLen = strPartInfo.substr(prevPos, pos - prevPos);
     strLen.erase(0, strLen.find_first_not_of(" "));
     strLen.erase(strLen.find_last_not_of(" ") + 1);
-    
-    if (strchr(strLen.c_str(), '-')) 
+
+    if (strchr(strLen.c_str(), '-'))
     {
         uiLen = 0xFFFFFFFF;
-    } 
-    else 
+    }
+    else
     {
         iCount = sscanf(strLen.c_str(), "0x%x", &uiLen);
-        
-        if (iCount != 1) 
+
+        if (iCount != 1)
         {
             return false;
         }
@@ -396,29 +401,29 @@ bool ParsePartitionInfo(string &strPartInfo, string &strName, UINT &uiOffset, UI
     prevPos = pos + 1;
     pos = strPartInfo.find('(',prevPos);
 
-    if (pos == string::npos) 
+    if (pos == string::npos)
     {
         return false;
     }
-    
+
     strOffset = strPartInfo.substr(prevPos, pos - prevPos);
     strOffset.erase(0, strOffset.find_first_not_of(" "));
     strOffset.erase(strOffset.find_last_not_of(" ") + 1);
     iCount = sscanf(strOffset.c_str(), "0x%x", &uiOffset);
-    
-    if (iCount != 1) 
+
+    if (iCount != 1)
     {
         return false;
     }
-    
+
     prevPos = pos + 1;
     pos = strPartInfo.find(')', prevPos);
-    
-    if (pos == string::npos) 
+
+    if (pos == string::npos)
     {
         return false;
     }
-    
+
     strName = strPartInfo.substr(prevPos, pos - prevPos);
     strName.erase(0, strName.find_first_not_of(" "));
     strName.erase(strName.find_last_not_of(" ") + 1);
@@ -429,19 +434,19 @@ bool ParsePartitionInfo(string &strPartInfo, string &strName, UINT &uiOffset, UI
 bool ParseUuidInfo(string &strUuidInfo, string &strName, string &strUUid)
 {
     string::size_type pos(0);
-    
-    if (strUuidInfo.size() <= 0) 
+
+    if (strUuidInfo.size() <= 0)
     {
         return false;
     }
-    
+
     pos = strUuidInfo.find('=');
-    
-    if (pos == string::npos) 
+
+    if (pos == string::npos)
     {
         return false;
     }
-    
+
     strName = strUuidInfo.substr(0, pos);
     strName.erase(0, strName.find_first_not_of(" "));
     strName.erase(strName.find_last_not_of(" ") + 1);
@@ -449,19 +454,19 @@ bool ParseUuidInfo(string &strUuidInfo, string &strName, string &strUUid)
     strUUid = strUuidInfo.substr(pos+1);
     strUUid.erase(0, strUUid.find_first_not_of(" "));
     strUUid.erase(strUUid.find_last_not_of(" ") + 1);
-    
-    while(true) 
-    { 
+
+    while(true)
+    {
         pos = 0;
-        if( (pos = strUUid.find("-")) != string::npos) 
-            strUUid.replace(pos,1,""); 
-        else 
-            break; 
+        if( (pos = strUUid.find("-")) != string::npos)
+            strUUid.replace(pos,1,"");
+        else
+            break;
     }
-    
+
     if (strUUid.size() != 32)
         return false;
-    
+
     return true;
 }
 
@@ -483,30 +488,30 @@ bool parse_parameter(char *pParameter, PARAM_ITEM_VECTOR &vecItem, CONFIG_ITEM_V
     UINT uiPartSize = 0;
     STRUCT_PARAM_ITEM item = {0};
     STRUCT_CONFIG_ITEM uuid_item = {0};
-    
+
     vecItem.clear();
     vecUuidItem.clear();
-    
-    while (!paramStream.eof()) 
+
+    while ( !paramStream.eof() )
     {
         getline(paramStream,strLine);
         line_size = strLine.size();
-        
+
         if (line_size > 0)
         {
             if (strLine[line_size - 1] == '\r')
             {
                 strLine = strLine.substr(0, line_size - 1);
             }
-            
+
             strLine.erase(0, strLine.find_first_not_of(" "));
             strLine.erase(strLine.find_last_not_of(" ") + 1);
-            
+
             if ( (strLine.size()==0 ) && (strLine[0] == '#') )
             {
                 pos = strLine.find("uuid:");
-                
-                if (pos != string::npos) 
+
+                if (pos != string::npos)
                 {
                     strPartInfo = strLine.substr(pos+5);
                     bRet = ParseUuidInfo(strPartInfo, strPartName, strUUid);
@@ -517,48 +522,48 @@ bool parse_parameter(char *pParameter, PARAM_ITEM_VECTOR &vecItem, CONFIG_ITEM_V
                     }
                     continue;
                 }
-                    
+
                 pos = strLine.find("mtdparts");
-                
+
                 if (pos == string::npos) {
                     continue;
                 }
-                
+
                 bFind = true;
                 posColon = strLine.find(':', pos);
-                
+
                 if (posColon == string::npos) {
                     continue;
                 }
-                
+
                 strPartition = strLine.substr(posColon + 1);
                 pos = 0;
                 posComma = strPartition.find(',', pos);
-                
-                while (posComma != string::npos) 
+
+                while (posComma != string::npos)
                 {
                     strPartInfo = strPartition.substr(pos, posComma - pos);
                     bRet = ParsePartitionInfo(strPartInfo, strPartName, uiPartOffset, uiPartSize);
-                    
-                    if (bRet) 
+
+                    if (bRet)
                     {
                         strcpy(item.szItemName, strPartName.c_str());
                         item.uiItemOffset = uiPartOffset;
                         item.uiItemSize = uiPartSize;
                         vecItem.push_back(item);
                     }
-                    
+
                     pos = posComma + 1;
                     posComma = strPartition.find(',', pos);
                 }
-                
+
                 strPartInfo = strPartition.substr(pos);
-                
-                if (strPartInfo.size() > 0) 
+
+                if (strPartInfo.size() > 0)
                 {
                     bRet = ParsePartitionInfo(strPartInfo, strPartName, uiPartOffset, uiPartSize);
-                    
-                    if (bRet) 
+
+                    if (bRet)
                     {
                         strcpy(item.szItemName, strPartName.c_str());
                         item.uiItemOffset = uiPartOffset;
@@ -569,38 +574,38 @@ bool parse_parameter(char *pParameter, PARAM_ITEM_VECTOR &vecItem, CONFIG_ITEM_V
             }
         }
     }
-    
+
     return bFind;
 }
 
 bool parse_parameter_file(char *pParamFile, PARAM_ITEM_VECTOR &vecItem, CONFIG_ITEM_VECTOR &vecUuidItem)
 {
     FILE *file = fopen(pParamFile, "rb");
-    
-    if( !file ) 
+
+    if( !file )
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, pParamFile);
         return false;
     }
-    
+
     int iFileSize;
     fseek(file, 0, SEEK_END);
     iFileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
     char *pParamBuf = NULL;
     pParamBuf = new char[iFileSize];
-    
-    if (!pParamBuf) 
+
+    if (!pParamBuf)
     {
         fclose(file);
         return false;
     }
-    
+
     int iRead;
     iRead = fread(pParamBuf, 1, iFileSize, file);
-    
-    if (iRead != iFileSize) 
+
+    if (iRead != iFileSize)
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno,iRead,iFileSize);
@@ -608,9 +613,9 @@ bool parse_parameter_file(char *pParamFile, PARAM_ITEM_VECTOR &vecItem, CONFIG_I
         delete []pParamBuf;
         return false;
     }
-    
+
     fclose(file);
-    
+
     bool bRet = parse_parameter(pParamBuf, vecItem, vecUuidItem);
     delete [] pParamBuf;
     return bRet;
@@ -622,25 +627,25 @@ bool is_sparse_image(char *szImage)
     u32 uiRead;
     FILE* file = fopen(szImage, "rb");
 
-    if( !file ) 
+    if( !file )
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, szImage);
         return false;
     }
-    
+
     uiRead = fread(&head, 1, sizeof(head), file);
-    
-    if (uiRead != sizeof(head)) 
+
+    if (uiRead != sizeof(head))
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno, uiRead, sizeof(head));
         fclose(file);
         return false;
     }
-    
+
     fclose(file);
-    
+
     if (head.magic!=SPARSE_HEADER_MAGIC)
     {
         return false;
@@ -654,31 +659,31 @@ bool is_ubifs_image(char *szImage)
     u32 magic;
     u32 uiRead;
     FILE* file = fopen(szImage, "rb");
-    
-    if( !file ) 
+
+    if( !file )
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, szImage);
         return false;
     }
-    
+
     uiRead = fread(&magic, 1, sizeof(magic), file);
-    
-    if (uiRead != sizeof(magic)) 
+
+    if (uiRead != sizeof(magic))
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno, uiRead, sizeof(magic));
         fclose(file);
         return false;
     }
-    
+
     fclose(file);
-    
+
     if ( magic != UBI_HEADER_MAGIC )
     {
         return false;
     }
-    
+
     return true;
 }
 
@@ -708,7 +713,7 @@ void prepare_gpt_backup(u8 *master, u8 *backup)
     val = le64_to_cpu(gptMasterHead->my_lba);
     gptBackupHead->my_lba = gptMasterHead->alternate_lba;
     gptBackupHead->alternate_lba = cpu_to_le64(val);
-    gptBackupHead->partition_entry_lba = cpu_to_le64(le64_to_cpu(gptMasterHead->last_usable_lba) + 1); 
+    gptBackupHead->partition_entry_lba = cpu_to_le64(le64_to_cpu(gptMasterHead->last_usable_lba) + 1);
     gptBackupHead->header_crc32 = 0;
 
     calc_crc32 = crc32_le(0, (unsigned char *)gptBackupHead, le32_to_cpu(gptBackupHead->header_size));
@@ -755,7 +760,7 @@ bool get_lba_from_param(u8 *param, char *pszName, u32 *part_offset, u32 *part_si
     bool bFound = false, bRet;
     PARAM_ITEM_VECTOR vecItem;
     CONFIG_ITEM_VECTOR vecUuid;
-    
+
     bRet = parse_parameter((char *)param, vecItem, vecUuid);
     if (!bRet)
         return false;
@@ -784,7 +789,7 @@ void update_gpt_disksize(u8 *master, u8 *backup, u32 total_sector)
 
     memset(zerobuf,0,GPT_ENTRY_SIZE);
     old_disksize = le64_to_cpu(gptMasterHead->alternate_lba) + 1;
-    for ( i = 0; i < le32_to_cpu(gptMasterHead->num_partition_entries); i++) 
+    for ( i = 0; i < le32_to_cpu(gptMasterHead->num_partition_entries); i++)
     {
         gptLastPartEntry = (gpt_entry *)(master + 2 * SECTOR_SIZE + i * GPT_ENTRY_SIZE);
 
@@ -796,24 +801,24 @@ void update_gpt_disksize(u8 *master, u8 *backup, u32 total_sector)
     gptLastPartEntry = (gpt_entry *)(master + 2 * SECTOR_SIZE + i * sizeof(gpt_entry));
     gptMasterHead->alternate_lba = cpu_to_le64(total_sector - 1);
     gptMasterHead->last_usable_lba = cpu_to_le64(total_sector- 34);
-    
-    if (gptLastPartEntry->ending_lba == (old_disksize - 34)) 
-    {   //grow partition 
+
+    if (gptLastPartEntry->ending_lba == (old_disksize - 34))
+    {   //grow partition
         gptLastPartEntry->ending_lba = cpu_to_le64(total_sector- 34);
         gptMasterHead->partition_entry_array_crc32 = cpu_to_le32(crc32_le(0, master + 2 * SECTOR_SIZE, GPT_ENTRY_SIZE * GPT_ENTRY_NUMBERS));
     }
-    
+
     gptMasterHead->header_crc32 = 0;
     gptMasterHead->header_crc32 = cpu_to_le32(crc32_le(0, master + SECTOR_SIZE, sizeof(gpt_header)));
     memcpy(backup,master + 2 * SECTOR_SIZE, GPT_ENTRY_SIZE * GPT_ENTRY_NUMBERS);
     memcpy(backup + GPT_ENTRY_SIZE * GPT_ENTRY_NUMBERS, master + SECTOR_SIZE, SECTOR_SIZE);
-    prepare_gpt_backup(master, backup);    
+    prepare_gpt_backup(master, backup);
 }
 
 bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
 {
     FILE *file = fopen(pParamFile, "rb");
-    if( !file ) 
+    if( !file )
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, pParamFile);
@@ -825,7 +830,7 @@ bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
     int iFileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    if (iFileSize != 67 * SECTOR_SIZE) 
+    if (iFileSize != 67 * SECTOR_SIZE)
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed, wrong size file: %s\r\n", __func__, pParamFile);
@@ -833,19 +838,19 @@ bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
         fclose(file);
         return false;
     }
-    
+
     int iRead = fread(master, 1, 34 * SECTOR_SIZE, file);
-    if (iRead != 34 * SECTOR_SIZE) 
+    if (iRead != 34 * SECTOR_SIZE)
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed,read master gpt err=%d, read=%d, total=%d\r\n", __func__, errno,iRead, 34 * SECTOR_SIZE);
- 
+
         fclose(file);
         return false;
     }
-    
+
     iRead = fread(backup, 1, 33 * SECTOR_SIZE, file);
-    if (iRead != 33 * SECTOR_SIZE) 
+    if (iRead != 33 * SECTOR_SIZE)
     {
         if (g_pLogObject)
             g_pLogObject->Record("%s failed,read backup gpt err=%d, read=%d, total=%d\r\n", __func__, errno,iRead, 33 * SECTOR_SIZE);
@@ -866,14 +871,14 @@ void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR 
     size_t pos;
     string strPartName;
     string::size_type colonPos;
-    
+
     /*1.protective mbr*/
     memset(gpt, 0, SECTOR_SIZE);
     mbr->signature = MSDOS_MBR_SIGNATURE;
     mbr->partition_record[0].sys_ind = EFI_PMBR_OSTYPE_EFI_GPT;
     mbr->partition_record[0].start_sect = 1;
     mbr->partition_record[0].nr_sects = (u32)-1;
-    
+
     /*2.gpt header*/
     memset(gpt + SECTOR_SIZE, 0, SECTOR_SIZE);
     gptHead->signature = cpu_to_le64(GPT_HEADER_SIGNATURE);
@@ -892,7 +897,7 @@ void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR 
 
     /*3.gpt partition entry*/
     memset(gpt + 2 * SECTOR_SIZE, 0, 32 * SECTOR_SIZE);
-    for ( size_t i = 0; i < vecParts.size(); i++ ) 
+    for ( size_t i = 0; i < vecParts.size(); i++ )
     {
         gen_rand_uuid(gptEntry->partition_type_guid.raw);
         gen_rand_uuid(gptEntry->unique_partition_guid.raw);
@@ -901,19 +906,19 @@ void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR 
         gptEntry->attributes.raw = 0;
         strPartName = vecParts[i].szItemName;
         colonPos = strPartName.find_first_of(':');
-        
-        if (colonPos != string::npos) 
+
+        if (colonPos != string::npos)
         {
             if (strPartName.find("bootable") != string::npos)
                 gptEntry->attributes.raw = PART_PROPERTY_BOOTABLE;
-            
+
             if (strPartName.find("grow") != string::npos)
                 gptEntry->ending_lba = cpu_to_le64(diskSectors - 34);
-            
+
             strPartName = strPartName.substr(0, colonPos);
             vecParts[i].szItemName[strPartName.size()] = 0;
         }
-        
+
         for ( size_t j = 0; j < strlen(vecParts[i].szItemName); j++ )
             gptEntry->partition_name[j] = vecParts[i].szItemName[j];
 
@@ -977,20 +982,20 @@ int MakeIDBlockData(PBYTE pDDR, PBYTE pLoader, PBYTE lpIDBlock, USHORT usFlashDa
     RK28_IDB_SEC1 sector1Info;
     RK28_IDB_SEC2 sector2Info;
     RK28_IDB_SEC3 sector3Info;
-    
+
     MakeSector0((PBYTE)&sector0Info, usFlashDataSec, usFlashBootSec, rc4Flag);
     MakeSector1((PBYTE)&sector1Info);
-    
-    if (!MakeSector2((PBYTE)&sector2Info)) 
+
+    if (!MakeSector2((PBYTE)&sector2Info))
     {
         return -6;
     }
- 
-    if (!MakeSector3((PBYTE)&sector3Info)) 
+
+    if (!MakeSector3((PBYTE)&sector3Info))
     {
         return -7;
     }
-    
+
     sector2Info.usSec0Crc = CRC_16((PBYTE)&sector0Info, SECTOR_SIZE);
     sector2Info.usSec1Crc = CRC_16((PBYTE)&sector1Info, SECTOR_SIZE);
     sector2Info.usSec3Crc = CRC_16((PBYTE)&sector3Info, SECTOR_SIZE);
@@ -999,24 +1004,24 @@ int MakeIDBlockData(PBYTE pDDR, PBYTE pLoader, PBYTE lpIDBlock, USHORT usFlashDa
     memcpy(lpIDBlock + SECTOR_SIZE, &sector1Info, SECTOR_SIZE);
     memcpy(lpIDBlock + SECTOR_SIZE * 3, &sector3Info, SECTOR_SIZE);
 
-    if (rc4Flag) 
+    if (rc4Flag)
     {
         for ( size_t i = 0; i < dwLoaderDataSize/SECTOR_SIZE; i++ )
             P_RC4(pDDR + i * SECTOR_SIZE, SECTOR_SIZE);
-        
+
         for ( size_t i = 0; i < dwLoaderSize/SECTOR_SIZE; i++ )
             P_RC4(pLoader + i * SECTOR_SIZE, SECTOR_SIZE);
     }
-    
+
     memcpy(lpIDBlock + SECTOR_SIZE * 4, pDDR, dwLoaderDataSize);
     memcpy(lpIDBlock + SECTOR_SIZE * (4 + usFlashDataSec), pLoader, dwLoaderSize);
 
     sector2Info.uiBootCodeCrc = CRC_32((PBYTE)(lpIDBlock + SECTOR_SIZE * 4), sector0Info.usBootCodeSize * SECTOR_SIZE);
     memcpy(lpIDBlock + SECTOR_SIZE * 2, &sector2Info, SECTOR_SIZE);
-    
-    for( size_t i = 0; i < 4; i++ ) 
+
+    for( size_t i = 0; i < 4; i++ )
     {
-        if(i != 1) 
+        if(i != 1)
         {
             P_RC4(lpIDBlock + SECTOR_SIZE * i, SECTOR_SIZE);
         }
@@ -1046,7 +1051,7 @@ bool MakeParamBuffer(char *pParamFile, char* &pParamData)
             g_pLogObject->Record("MakeParamBuffer failed,err=%d,can't open file: %s\r\n", errno, pParamFile);
         return false;
     }
-    
+
     int iFileSize;
     fseek(file,0,SEEK_END);
     iFileSize = ftell(file);
@@ -1060,7 +1065,7 @@ bool MakeParamBuffer(char *pParamFile, char* &pParamData)
     }
     memset(pParamBuf,0,iFileSize+12);
     *(UINT *)(pParamBuf) = 0x4D524150;
-    
+
     int iRead;
     iRead = fread(pParamBuf+8,1,iFileSize,file);
     if (iRead!=iFileSize)
@@ -1072,11 +1077,11 @@ bool MakeParamBuffer(char *pParamFile, char* &pParamData)
         return false;
     }
     fclose(file);
-    
+
     *(UINT *)(pParamBuf+4) = iFileSize;
     *(UINT *)(pParamBuf+8+iFileSize) = CRC_32( (PBYTE)pParamBuf+8, iFileSize);
     pParamData = pParamBuf;
-    
+
     return true;
 }
 
@@ -1086,12 +1091,12 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
     char *pParamBuf = NULL, writeBuf[512*1024];
     int iRet, nParamSec, nParamSize;
     bool bRet, bSuccess = false;
-    
+
     if (!check_device_type(dev, RKUSB_MASKROM|RKUSB_LOADER))
         return false;
 
     pComm = new CRKUsbComm(dev, g_pLogObject, bRet);
-    if (!bRet) 
+    if (!bRet)
     {
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
@@ -1100,7 +1105,7 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         return bSuccess;
     }
 
-    if (!MakeParamBuffer(szParameter, pParamBuf)) 
+    if (!MakeParamBuffer(szParameter, pParamBuf))
     {
         ERROR_COLOR_ATTR;
         printf("Generating parameter failed!");
@@ -1108,12 +1113,12 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         printf("\r\n");
         return bSuccess;
     }
-    
+
     printf("Writing parameter...\r\n");
     nParamSize = *(UINT *)(pParamBuf+4) + 12;
     nParamSec = BYTE2SECTOR(nParamSize);
-    
-    if (nParamSec > 1024) 
+
+    if (nParamSec > 1024)
     {
         ERROR_COLOR_ATTR;
         printf("parameter is too large!");
@@ -1121,12 +1126,12 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         printf("\r\n");
         return bSuccess;
     }
-    
+
     memset(writeBuf, 0, nParamSec*512);
     memcpy(writeBuf, pParamBuf, nParamSize);
     iRet = pComm->RKU_WriteLBA(0x2000, nParamSec, (BYTE *)writeBuf);
-    
-    if (iRet != ERR_SUCCESS) 
+
+    if (iRet != ERR_SUCCESS)
     {
         ERROR_COLOR_ATTR;
         printf("Writing parameter failed!");
@@ -1134,13 +1139,13 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         printf("\r\n");
         return bSuccess;
     }
-        
+
     bSuccess = true;
     CURSOR_MOVEUP_LINE(1);
     CURSOR_DEL_LINE;
     printf("Writing parameter succeeded.\r\n");
     STDOUTFLUSH;
-    
+
     return bSuccess;
 }
 
@@ -1153,13 +1158,13 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
     CONFIG_ITEM_VECTOR vecUuid;
     int iRet;
     bool bRet, bSuccess = false;
-    
+
     if (!check_device_type(dev, RKUSB_MASKROM))
         return false;
 
     pComm = new CRKUsbComm(dev, g_pLogObject, bRet);
-    
-    if (!bRet) 
+
+    if (!bRet)
     {
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
@@ -1172,7 +1177,7 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
     //1.get flash info
     iRet = pComm->RKU_ReadFlashInfo(flash_info);
 
-    if (iRet != ERR_SUCCESS) 
+    if (iRet != ERR_SUCCESS)
     {
         ERROR_COLOR_ATTR;
         printf("Reading Flash Info failed!");
@@ -1180,10 +1185,10 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         printf("\r\n");
         return bSuccess;
     }
-    
+
     total_size_sector = *(u32 *)flash_info;
-    
-    if (strstr(szParameter, ".img")) 
+
+    if (strstr(szParameter, ".img"))
     {
         if (!load_gpt_buffer(szParameter, master_gpt, backup_gpt)) {
             ERROR_COLOR_ATTR;
@@ -1193,13 +1198,13 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
             return bSuccess;
         }
         update_gpt_disksize(master_gpt, backup_gpt, total_size_sector);
-    } 
-    else 
+    }
+    else
     {
         //2.get partition from parameter
         bRet = parse_parameter_file(szParameter, vecItems, vecUuid);
-        
-        if (!bRet) 
+
+        if (!bRet)
         {
             ERROR_COLOR_ATTR;
             printf("Parsing parameter failed!");
@@ -1207,17 +1212,17 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
             printf("\r\n");
             return bSuccess;
         }
-        
+
         //3.generate gpt info
         create_gpt_buffer(master_gpt, vecItems, vecUuid, total_size_sector);
         memcpy(backup_gpt, master_gpt + 2* SECTOR_SIZE, 32 * SECTOR_SIZE);
         memcpy(backup_gpt + 32 * SECTOR_SIZE, master_gpt + SECTOR_SIZE, SECTOR_SIZE);
         prepare_gpt_backup(master_gpt, backup_gpt);
     }
-    
+
     //4. write gpt
     iRet = pComm->RKU_WriteLBA(0, 34, master_gpt);
-    if (iRet != ERR_SUCCESS) 
+    if (iRet != ERR_SUCCESS)
     {
         ERROR_COLOR_ATTR;
         printf("Writing master gpt failed!");
@@ -1225,9 +1230,9 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         printf("\r\n");
         return bSuccess;
     }
-    
+
     iRet = pComm->RKU_WriteLBA(total_size_sector - 33, 33, backup_gpt);
-    if (iRet != ERR_SUCCESS) 
+    if (iRet != ERR_SUCCESS)
     {
         ERROR_COLOR_ATTR;
         printf("Writing backup gpt failed!");
@@ -1235,13 +1240,13 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         printf("\r\n");
         return bSuccess;
     }
-        
+
     bSuccess = true;
     CURSOR_MOVEUP_LINE(1);
     CURSOR_DEL_LINE;
     printf("Writing gpt succeeded.\r\n");
     STDOUTFLUSH;
-    
+
     return bSuccess;
 }
 
@@ -1254,197 +1259,197 @@ char gSubfix[MAX_LINE_LEN] = OUT_SUBFIX;
 char* gConfigPath = NULL;
 uint8_t gBuf[MAX_MERGE_SIZE] = {0};
 
-static inline void fixPath(char* path) 
+static inline void fixPath(char* path)
 {
     int len = strlen(path);
-    for( size_t i=0; i<len; i++) 
+    for( size_t i=0; i<len; i++)
     {
         if (path[i] == '\\')
             path[i] = '/';
-        else 
+        else
         if (path[i] == '\r' || path[i] == '\n')
             path[i] = '\0';
     }
 }
 
-static bool parseChip(FILE* file) 
+static bool parseChip(FILE* file)
 {
-    if (SCANF_EAT(file) != 0) 
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
-    if (fscanf(file, OPT_NAME "=%s", gOpts.chip) != 1) 
+
+    if (fscanf(file, OPT_NAME "=%s", gOpts.chip) != 1)
     {
         return false;
     }
-    
+
     printf("chip: %s\n", gOpts.chip);
     STDOUTFLUSH;
-    
+
     return true;
 }
 
-static bool parseVersion(FILE* file) 
+static bool parseVersion(FILE* file)
 {
-    if (SCANF_EAT(file) != 0) 
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_MAJOR "=%d", &gOpts.major) != 1)
         return false;
-    
-    if (SCANF_EAT(file) != 0) 
+
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_MINOR "=%d", &gOpts.minor) != 1)
         return false;
-    
+
     printf("major: %d, minor: %d\n", gOpts.major, gOpts.minor);
     STDOUTFLUSH;
-    
+
     return true;
 }
 
-static bool parse471(FILE* file) 
+static bool parse471(FILE* file)
 {
     size_t index = 0;
     size_t pos = 0;
     char buf[MAX_LINE_LEN] = {0};
 
-    if (SCANF_EAT(file) != 0) 
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_NUM "=%d", &gOpts.code471Num) != 1)
         return false;
-    
+
     printf("num: %d\n", gOpts.code471Num);
-    
+
     if (!gOpts.code471Num)
         return true;
-    
+
     if (gOpts.code471Num < 0)
         return false;
-    
+
     gOpts.code471Path = (line_t*) malloc(sizeof(line_t) * gOpts.code471Num);
-    
-    for ( size_t i=0; i<gOpts.code471Num; i++) 
+
+    for ( size_t i=0; i<gOpts.code471Num; i++)
     {
-        if (SCANF_EAT(file) != 0) 
+        if (SCANF_EAT(file) != 0)
         {
             return false;
         }
-        
+
         if ( fscanf(file, OPT_PATH "%d=%[^\r^\n]", &index, buf) != 2 )
             return false;
-        
+
         index--;
         fixPath(buf);
         strcpy((char*)gOpts.code471Path[index], buf);
         printf("path%i: %s\n", index, gOpts.code471Path[index]);
     }
-    
+
     pos = ftell(file);
-    
-    if (SCANF_EAT(file) != 0) 
+
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_SLEEP "=%d", &gOpts.code471Sleep) != 1)
         fseek(file, pos, SEEK_SET);
-    
+
     printf("sleep: %d\n", gOpts.code471Sleep);
     STDOUTFLUSH;
-    
+
     return true;
 }
 
-static bool parse472(FILE* file) 
+static bool parse472(FILE* file)
 {
     size_t index;
     size_t pos;
     char buf[MAX_LINE_LEN] = {0};
 
-    if (SCANF_EAT(file) != 0) 
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_NUM "=%d", &gOpts.code472Num) != 1)
         return false;
-    
+
     printf("num: %d\n", gOpts.code472Num);
-    
+
     if (!gOpts.code472Num)
         return true;
-    
+
     if (gOpts.code472Num < 0)
         return false;
-    
+
     gOpts.code472Path = (line_t*) malloc(sizeof(line_t) * gOpts.code472Num);
-    
-    for ( size_t i=0; i<gOpts.code472Num; i++ ) 
+
+    for ( size_t i=0; i<gOpts.code472Num; i++ )
     {
-        if (SCANF_EAT(file) != 0) 
+        if (SCANF_EAT(file) != 0)
         {
             return false;
         }
-        
+
         if ( fscanf(file, OPT_PATH "%d=%[^\r^\n]", &index, buf)  != 2)
             return false;
-        
+
         fixPath(buf);
         index--;
         strcpy((char*)gOpts.code472Path[index], buf);
         printf("path%i: %s\n", index, gOpts.code472Path[index]);
     }
-    
+
     pos = ftell(file);
-    
-    if (SCANF_EAT(file) != 0) 
+
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_SLEEP "=%d", &gOpts.code472Sleep) != 1)
         fseek(file, pos, SEEK_SET);
     printf("sleep: %d\n", gOpts.code472Sleep);
     STDOUTFLUSH;
-    
+
     return true;
 }
 
-static bool parseLoader(FILE* file) 
+static bool parseLoader(FILE* file)
 {
     size_t index;
     size_t pos;
     char buf[MAX_LINE_LEN] = {0};
     char buf2[MAX_LINE_LEN] = {0};
 
-    if (SCANF_EAT(file) != 0) 
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     pos = ftell(file);
 
-    if (fscanf(file, OPT_NUM "=%d", &gOpts.loaderNum) != 1) 
+    if (fscanf(file, OPT_NUM "=%d", &gOpts.loaderNum) != 1)
     {
         fseek(file, pos, SEEK_SET);
-        if(fscanf(file, OPT_LOADER_NUM "=%d", &gOpts.loaderNum) != 1) 
+        if(fscanf(file, OPT_LOADER_NUM "=%d", &gOpts.loaderNum) != 1)
         {
             return false;
         }
     }
-    
+
     printf("num: %d\n", gOpts.loaderNum);
-    
+
     if (!gOpts.loaderNum)
         return false;
 
@@ -1453,37 +1458,37 @@ static bool parseLoader(FILE* file)
 
     gOpts.loader = (name_entry*) malloc(sizeof(name_entry) * gOpts.loaderNum);
 
-    for ( size_t i=0; i<gOpts.loaderNum; i++ ) 
+    for ( size_t i=0; i<gOpts.loaderNum; i++ )
     {
-        if (SCANF_EAT(file) != 0) 
+        if (SCANF_EAT(file) != 0)
         {
             return false;
         }
-        
+
         if ( fscanf(file, OPT_LOADER_NAME "%d=%s", &index, buf) != 2 )
             return false;
-        
+
         strcpy(gOpts.loader[index].name, buf);
         printf("name%d: %s\n", index, gOpts.loader[index].name);
-        
+
         index++;
     }
 
-    for ( size_t i=0; i<gOpts.loaderNum; i++ ) 
+    for ( size_t i=0; i<gOpts.loaderNum; i++ )
     {
-        if (SCANF_EAT(file) != 0) 
+        if (SCANF_EAT(file) != 0)
         {
             return false;
         }
-        
+
         if ( fscanf(file, "%[^=]=%[^\r^\n]", buf, buf2) != 2 )
             return false;
-        
+
         size_t j = 0;
-        
-        for ( j=0; j<gOpts.loaderNum; j++ ) 
+
+        for ( j=0; j<gOpts.loaderNum; j++ )
         {
-            if (!strcmp(gOpts.loader[j].name, buf)) 
+            if (!strcmp(gOpts.loader[j].name, buf))
             {
                 fixPath(buf2);
                 strcpy(gOpts.loader[j].path, buf2);
@@ -1491,8 +1496,8 @@ static bool parseLoader(FILE* file)
                 break;
             }
         }
-        
-        if (j >= gOpts.loaderNum) 
+
+        if (j >= gOpts.loaderNum)
         {
             return false;
         }
@@ -1500,59 +1505,59 @@ static bool parseLoader(FILE* file)
     return true;
 }
 
-static bool parseOut(FILE* file) 
+static bool parseOut(FILE* file)
 {
-    if (SCANF_EAT(file) != 0) 
+    if (SCANF_EAT(file) != 0)
     {
         return false;
     }
-    
+
     if (fscanf(file, OPT_OUT_PATH "=%[^\r^\n]", gOpts.outPath) != 1)
         return false;
-    
+
     fixPath(gOpts.outPath);
     printf("out: %s\n", gOpts.outPath);
-    
+
     return true;
 }
 
 
-void printOpts(FILE* out) 
+void printOpts(FILE* out)
 {
     size_t i;
-    
+
     fprintf(out, SEC_CHIP "\n" OPT_NAME "=%s\n", gOpts.chip);
     fprintf(out, SEC_VERSION "\n" OPT_MAJOR "=%d\n" OPT_MINOR
             "=%d\n", gOpts.major, gOpts.minor);
 
     fprintf(out, SEC_471 "\n" OPT_NUM "=%d\n", gOpts.code471Num);
-    
-    for (i=0 ;i<gOpts.code471Num ;i++) 
+
+    for (i=0 ;i<gOpts.code471Num ;i++)
     {
         fprintf(out, OPT_PATH "%d=%s\n", i+1, gOpts.code471Path[i]);
     }
-    
+
     if (gOpts.code471Sleep > 0)
         fprintf(out, OPT_SLEEP "=%d\n", gOpts.code471Sleep);
 
     fprintf(out, SEC_472 "\n" OPT_NUM "=%d\n", gOpts.code472Num);
-    
-    for (i=0 ;i<gOpts.code472Num ;i++) 
+
+    for (i=0 ;i<gOpts.code472Num ;i++)
     {
         fprintf(out, OPT_PATH "%d=%s\n", i+1, gOpts.code472Path[i]);
     }
-    
+
     if (gOpts.code472Sleep > 0)
         fprintf(out, OPT_SLEEP "=%d\n", gOpts.code472Sleep);
 
     fprintf(out, SEC_LOADER "\n" OPT_NUM "=%d\n", gOpts.loaderNum);
-    
-    for (i=0 ;i<gOpts.loaderNum ;i++) 
+
+    for (i=0 ;i<gOpts.loaderNum ;i++)
     {
         fprintf(out, OPT_LOADER_NAME "%d=%s\n", i+1, gOpts.loader[i].name);
     }
-    
-    for (i=0 ;i<gOpts.loaderNum ;i++) 
+
+    for (i=0 ;i<gOpts.loaderNum ;i++)
     {
         fprintf(out, "%s=%s\n", gOpts.loader[i].name, gOpts.loader[i].path);
     }
@@ -1560,7 +1565,7 @@ void printOpts(FILE* out)
     fprintf(out, SEC_OUT "\n" OPT_OUT_PATH "=%s\n", gOpts.outPath);
 }
 
-static bool parseOpts(void) 
+static bool parseOpts(void)
 {
     bool ret = false;
     bool chipOk = false;
@@ -1572,17 +1577,17 @@ static bool parseOpts(void)
     char buf[MAX_LINE_LEN];
 
     char* configPath = (gConfigPath == (char*)NULL)? (char*)DEF_CONFIG_FILE: gConfigPath;
-    
+
     FILE* file = fopen(configPath, "r");
-    if (!file) 
+    if (!file)
     {
         fprintf(stderr, "config (%s) not found!\n", configPath);
-        
-        if (strcmp(configPath, (char*)DEF_CONFIG_FILE) == 0) 
+
+        if (strcmp(configPath, (char*)DEF_CONFIG_FILE) == 0)
         {
             file = fopen(DEF_CONFIG_FILE, "w");
-            
-            if (file) 
+
+            if (file)
             {
                 fprintf(stderr, "creating defconfig\n");
                 printOpts(file);
@@ -1593,81 +1598,81 @@ static bool parseOpts(void)
 
     printf("Starting to parse...\n");
 
-    if (SCANF_EAT(file) > 0) 
-    {    
-        while(fscanf(file, "%s", buf) == 1) 
+    if (SCANF_EAT(file) > 0)
+    {
+        while(fscanf(file, "%s", buf) == 1)
         {
-            if (!strcmp(buf, SEC_CHIP)) 
+            if (!strcmp(buf, SEC_CHIP))
             {
                 chipOk = parseChip(file);
-                if (!chipOk) 
+                if (!chipOk)
                 {
                     printf("parseChip failed!\n");
                     goto end;
                 }
-            } 
-            else 
-            if (!strcmp(buf, SEC_VERSION)) 
+            }
+            else
+            if (!strcmp(buf, SEC_VERSION))
             {
                 versionOk = parseVersion(file);
-                if (!versionOk) 
+                if (!versionOk)
                 {
                     printf("parseVersion failed!\n");
                     goto end;
                 }
-            } 
-            else 
-            if (!strcmp(buf, SEC_471)) 
+            }
+            else
+            if (!strcmp(buf, SEC_471))
             {
                 code471Ok = parse471(file);
-                if (!code471Ok) 
+                if (!code471Ok)
                 {
                     printf("parse471 failed!\n");
                     goto end;
                 }
-            } 
-            else 
-            if (!strcmp(buf, SEC_472)) 
+            }
+            else
+            if (!strcmp(buf, SEC_472))
             {
                 code472Ok = parse472(file);
-                if (!code472Ok) 
+                if (!code472Ok)
                 {
                     printf("parse472 failed!\n");
                     goto end;
                 }
-            } 
-            else 
-            if (!strcmp(buf, SEC_LOADER)) 
+            }
+            else
+            if (!strcmp(buf, SEC_LOADER))
             {
                 loaderOk = parseLoader(file);
-                if (!loaderOk) 
+                if (!loaderOk)
                 {
                     printf("parseLoader failed!\n");
                     goto end;
                 }
-            } 
-            else 
-            if (!strcmp(buf, SEC_OUT)) 
+            }
+            else
+            if (!strcmp(buf, SEC_OUT))
             {
                 outOk = parseOut(file);
-                if (!outOk) 
+                if (!outOk)
                 {
                     printf("parseOut failed!\n");
                     goto end;
                 }
             }
-            else 
-            if (buf[0] == '#') 
+            else
+            if (buf[0] == '#')
             {
                 continue;
-            } 
-            else 
+            }
+            else
             {
                 printf("unknown sec: %s!\n", buf);
                 goto end;
             }
-            
-            if (SCANF_EAT(file) != 0) 
+
+            if (SCANF_EAT(file) != 0)
             {
                 goto end;
             }
@@ -1677,15 +1682,15 @@ static bool parseOpts(void)
                 && loaderOk && outOk)
             ret = true;
     }
-    
+
 end:
     if (file)
         fclose(file);
-    
+
     return ret;
 }
 
-bool initOpts(void) 
+bool initOpts(void)
 {
     //set default opts
     gOpts.major = DEF_MAJOR;
@@ -1712,19 +1717,19 @@ bool initOpts(void)
 
 /************merge code****************/
 
-static inline uint32_t getBCD(unsigned short value) 
+static inline uint32_t getBCD(unsigned short value)
 {
     uint8_t tmp[2] = {0};
     uint32_t ret;
     //if (value > 0xFFFF) {
     //  return 0;
     //}
-    for( size_t i=0; i < 2; i++ ) 
+    for( size_t i=0; i < 2; i++ )
     {
         tmp[i] = (((value/10)%10)<<4) | (value%10);
         value /= 100;
     }
-    
+
     ret = ((uint16_t)(tmp[1] << 8)) | tmp[0];
 
     printf("ret: %x\n",ret);
@@ -1733,15 +1738,15 @@ static inline uint32_t getBCD(unsigned short value)
 
 static inline void str2wide(const char* str, uint16_t* wide, int len)
 {
-    for ( size_t i = 0; i < len; i++) 
+    for ( size_t i = 0; i < len; i++)
     {
         wide[i] = (uint16_t) str[i];
     }
-    
+
     wide[len] = 0;
 }
 
-static inline void getName(char* path, uint16_t* dst) 
+static inline void getName(char* path, uint16_t* dst)
 {
     char* end;
     char* start;
@@ -1775,7 +1780,7 @@ static inline void getName(char* path, uint16_t* dst)
     STDOUTFLUSH;
 }
 
-static inline bool getFileSize(const char *path, uint32_t* size) 
+static inline bool getFileSize(const char *path, uint32_t* size)
 {
     struct stat st = {0};
 
@@ -1785,11 +1790,11 @@ static inline bool getFileSize(const char *path, uint32_t* size)
     *size = st.st_size;
     printf("path: %s, size: %d\n", path, *size);
     STDOUTFLUSH;
-    
+
     return true;
 }
 
-static inline rk_time getTime(void) 
+static inline rk_time getTime(void)
 {
     rk_time rkTime;
 
@@ -1807,11 +1812,11 @@ static inline rk_time getTime(void)
             rkTime.year, rkTime.month, rkTime.day,
             rkTime.hour, rkTime.minute, rkTime.second);
     STDOUTFLUSH;
-    
+
     return rkTime;
 }
 
-static bool writeFile(FILE* outFile, const char* path, bool fix) 
+static bool writeFile(FILE* outFile, const char* path, bool fix)
 {
     bool ret = false;
     uint32_t size = 0, fixSize = 0;
@@ -2388,14 +2393,14 @@ bool print_gpt(STRUCT_RKDEVICE_DESC &dev)
         if (gptHead->signature != le64_to_cpu(GPT_HEADER_SIGNATURE)) {
             goto Exit_PrintGpt;
         }
-            
+
     } else {
         if (g_pLogObject)
                 g_pLogObject->Record("Error: read gpt failed, err=%d", iRet);
         printf("Read GPT failed!\r\n");
         goto Exit_PrintGpt;
     }
-    
+
     printf("**********Partition Info(GPT)**********\r\n");
     printf("NO  LBA       Name                \r\n");
     for (i = 0; i < le32_to_cpu(gptHead->num_partition_entries); i++) {
@@ -2440,7 +2445,7 @@ bool print_parameter(STRUCT_RKDEVICE_DESC &dev)
         if (*(u32 *)param_buf != 0x4D524150) {
             goto Exit_PrintParam;
         }
-            
+
     } else {
         if (g_pLogObject)
                 g_pLogObject->Record("Error: read parameter failed, err=%d", iRet);
@@ -2449,7 +2454,7 @@ bool print_parameter(STRUCT_RKDEVICE_DESC &dev)
     }
     nParamSize = *(u32 *)(param_buf + 4);
     memset(param_buf+8+nParamSize, 0, 512*SECTOR_SIZE - nParamSize - 8);
-    
+
     bRet = parse_parameter((char *)(param_buf+8), vecParamItem, vecUuidItem);
     if (!bRet) {
         if (g_pLogObject)
@@ -2574,40 +2579,40 @@ bool reset_device(STRUCT_RKDEVICE_DESC &dev, BYTE subCode = RST_NONE_SUBCODE)
 {
     if (!check_device_type(dev, RKUSB_LOADER | RKUSB_MASKROM))
         return false;
-    
+
     CRKUsbComm *pComm = NULL;
     bool bRet, bSuccess = false;
     int iRet;
-    
+
     pComm =  new CRKUsbComm(dev, g_pLogObject, bRet);
-    if (pComm) 
+    if (pComm)
     {
         iRet = pComm->RKU_ResetDevice(subCode);
-        if (iRet != ERR_SUCCESS) 
+        if (iRet != ERR_SUCCESS)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error: RKU_ResetDevice failed, err=%d", iRet);
             printf("Reset Device failed!\r\n");
-        } 
-        else 
+        }
+        else
         {
             bSuccess = true;
             printf("Reset Device OK.\r\n");
         }
-    } 
-    else 
+    }
+    else
     {
         printf("Reset Device quit, creating comm object failed!\r\n");
     }
-    
-    if (pComm) 
+
+    if (pComm)
     {
         delete pComm;
         pComm = NULL;
     }
-    
+
     STDOUTFLUSH;
-    
+
     return bSuccess;
 }
 
@@ -2729,7 +2734,7 @@ bool read_capability(STRUCT_RKDEVICE_DESC &dev)
 
     pComm =  new CRKUsbComm(dev, g_pLogObject, bRet);
     if (bRet) {
-        
+
         BYTE capability[8];
         iRet = pComm->RKU_ReadCapability(capability);
         if (iRet != ERR_SUCCESS)
@@ -2750,7 +2755,7 @@ bool read_capability(STRUCT_RKDEVICE_DESC &dev)
             {
                 printf("Vendor Storage:\tenabled\r\n");
             }
-                
+
             if (capability[0] & 4)
             {
                 printf("First 4m Access:\tenabled\r\n");
@@ -3048,7 +3053,7 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
     dwMaxReadWriteBytes = DEFAULT_RW_LBA * SECTOR_SIZE;
     pComm =  new CRKUsbComm(dev, g_pLogObject, bRet);
     if (bRet) {
-        
+
         file = fopen(szFile, "rb");
         if( !file ) {
             printf("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, szFile);
@@ -3074,7 +3079,7 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
             printf("%s failed, erase partition error\r\n", __func__);
             goto Exit_WriteSparseLBA;
         }
-        while(curChunk < header.total_chunks) 
+        while(curChunk < header.total_chunks)
         {
             if (!EatSparseChunk(file, chunk)) {
                 goto Exit_WriteSparseLBA;
@@ -3194,7 +3199,7 @@ Exit_WriteSparseLBA:
     if (file)
         fclose(file);
     return bSuccess;
-    
+
 }
 
 bool write_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, char *szFile)
@@ -3210,7 +3215,7 @@ bool write_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, char *szFile)
     UINT uiLen;
     int nSectorSize = 512;
     BYTE pBuf[nSectorSize * DEFAULT_RW_LBA];
-    
+
 
     pComm =  new CRKUsbComm(dev, g_pLogObject, bRet);
     if (bRet) {
@@ -3365,7 +3370,7 @@ void list_device(CRKScan *pScan)
         printf("DevNo=%d\tVid=0x%x,Pid=0x%x,LocationID=%x\t%s\r\n",i+1,desc.usVid,
                desc.usPid,desc.uiLocationID,strDevType.c_str());
     }
-    
+
 }
 
 
@@ -3385,7 +3390,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
 
     transform(strCmd.begin(), strCmd.end(), strCmd.begin(), (int(*)(int))toupper);
     s = (char*)strCmd.c_str();
-    
+
     for( size_t i = 0; i < (int)strlen(s); i++)
     {
         s[i] = toupper(s[i]);
@@ -3395,38 +3400,38 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     {
         usage();
         return true;
-    } 
-    else 
-    if((strcmp(strCmd.c_str(), "-V") == 0) || (strcmp(strCmd.c_str(), "--VERSION") == 0)) 
+    }
+    else
+    if((strcmp(strCmd.c_str(), "-V") == 0) || (strcmp(strCmd.c_str(), "--VERSION") == 0))
     {
 #ifdef _WIN32
-        printf( "rkdeveloptool ver %s(%s)-win32\r\n", 
+        printf( "rkdeveloptool ver %s(%s)-win32\r\n",
                 PACKAGE_VERSION, INTERNAL_VERSION );
 #else
         printf("rkdeveloptool ver %s\r\n", PACKAGE_VERSION);
 #endif /// of _WIN32
         return true;
-    } 
-    else 
+    }
+    else
     //pack boot loader
-    if (strcmp(strCmd.c_str(), "PACK") == 0) 
+    if (strcmp(strCmd.c_str(), "PACK") == 0)
     {
         mergeBoot();
         return true;
-    } 
-    else 
+    }
+    else
     //unpack boot loader
-    if (strcmp(strCmd.c_str(), "UNPACK") == 0) 
+    if (strcmp(strCmd.c_str(), "UNPACK") == 0)
     {
         string strLoader = argv[2];
         unpackBoot((char*)strLoader.c_str());
         return true;
-    } 
-    else 
+    }
+    else
     //tag u-boot spl
-    if (strcmp(strCmd.c_str(), "TAGSPL") == 0) 
+    if (strcmp(strCmd.c_str(), "TAGSPL") == 0)
     {
-        if (argc == 4) 
+        if (argc == 4)
         {
             string tag = argv[2];
             string spl = argv[3];
@@ -3434,29 +3439,29 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
             tag_spl((char*)tag.c_str(), (char*)spl.c_str());
             return true;
         }
-        
+
         printf("tagspl: parameter error\n");
         usage();
     }
-    
+
     cnt = pScan->Search(RKUSB_MASKROM | RKUSB_LOADER);
-    
-    if(strcmp(strCmd.c_str(), "LD") == 0) 
+
+    if(strcmp(strCmd.c_str(), "LD") == 0)
     {
         list_device(pScan);
         return (cnt>0)?true:false;
     }
-    
-    if ( cnt < 1 ) 
+
+    if ( cnt < 1 )
     {
         ERROR_COLOR_ATTR;
         printf("Did not find any rockusb device, please plug device in!");
         NORMAL_COLOR_ATTR;
         printf("\r\n");
         return bSuccess;
-    } 
-    else 
-    if (cnt > 1) 
+    }
+    else
+    if (cnt > 1)
     {
         ERROR_COLOR_ATTR;
         printf("Found too many rockusb devices, please plug devices out!");
@@ -3466,7 +3471,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     }
 
     bRet = pScan->GetDevice(dev, 0);
-    if (!bRet) 
+    if (!bRet)
     {
         ERROR_COLOR_ATTR;
         printf("Getting information about rockusb device failed!");
@@ -3475,21 +3480,21 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         return bSuccess;
     }
 
-    if(strcmp(strCmd.c_str(), "RD") == 0) 
+    if(strcmp(strCmd.c_str(), "RD") == 0)
     {
         printf( "Resetting device ...\r\n" );
-        
+
         if ((argc != 2) && (argc != 3))
         {
             printf("Parameter of [RD] command is invalid, please check help!\r\n");
         }
-        else 
+        else
         {
             if (argc == 2)
             {
                 bSuccess = reset_device(dev);
             }
-            else 
+            else
             {
                 UINT uiSubCode;
                 char *pszEnd;
@@ -3498,14 +3503,14 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                 {
                     printf("Subcode is invalid, please check!\r\n");
                 }
-                else 
+                else
                 {
                     if (uiSubCode <= 5)
                         bSuccess = reset_device(dev, uiSubCode);
                     else
                         printf("Subcode is invalid, please check!\r\n");
                 }
-            }            
+            }
         }
     } else if(strcmp(strCmd.c_str(), "TD") == 0) {
         bSuccess = test_device(dev);
@@ -3625,7 +3630,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                 else
                     printf("Not found any partition table!\r\n");
             }
-            
+
         } else
             printf("Parameter of [WLX] command is invalid, please check help!\r\n");
     } else if (strcmp(strCmd.c_str(), "RL") == 0) {//Read LBA
@@ -3646,34 +3651,34 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                 }
             }
         }
-    } 
-    else 
-    if(strcmp(strCmd.c_str(), "PPT") == 0) 
+    }
+    else
+    if(strcmp(strCmd.c_str(), "PPT") == 0)
     {
-        if (argc == 2) 
+        if (argc == 2)
         {
             bSuccess = print_gpt(dev);
-            if (!bSuccess) 
+            if (!bSuccess)
             {
                 bSuccess = print_parameter(dev);
 
                 if (!bSuccess)
                     printf("Not found any partition table!\r\n");
             }
-        } 
+        }
         else
         {
             printf("Parameter of [PPT] command is invalid, please check help!\r\n");
         }
-    } 
-    else 
+    }
+    else
     {
         printf("command is invalid!\r\n");
         usage();
     }
-    
+
     STDOUTFLUSH;
-    
+
     return bSuccess;
 }
 
@@ -3683,9 +3688,9 @@ void sighandler(int sig)
 {
     if ( sigproc == true )
         return;
-    
+
     sigproc = true;
-    
+
     char prtbuff[512] = {0};
     snprintf( prtbuff, 512, "Signal trapped : %d\n", sig );
     write( 1, prtbuff, strlen( prtbuff ) );
@@ -3695,7 +3700,7 @@ void sighandler(int sig)
         delete g_pLogObject;
 
     libusb_exit(NULL);
-    
+
     sigproc = false;
     exit(0);
 }
@@ -3708,7 +3713,7 @@ int main(int argc, char* argv[])
     // --------------------------
 
     CRKScan *pScan = NULL;
-    int ret;
+    int ret = 0;
     char szProgramProcPath[100] = {0};
     char szProgramDir[256] = {0};
     string strLogDir,strConfigFile;
@@ -3737,7 +3742,7 @@ int main(int argc, char* argv[])
     strConfigFile = szProgramDir;
     strConfigFile += "/config.ini";
 
-#ifndef _WIN32    
+#ifndef _WIN32
     if (opendir(strLogDir.c_str()) == NULL)
         mkdir(strLogDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);
 #else
@@ -3753,25 +3758,25 @@ int main(int argc, char* argv[])
     {
         g_pLogObject->Record( "rkdevloptool log started.\n" );
     }
-#endif 
+#endif
 
-    if(stat(strConfigFile.c_str(), &statBuf) < 0) 
+    if(stat(strConfigFile.c_str(), &statBuf) < 0)
     {
-        if (g_pLogObject) 
+        if (g_pLogObject)
         {
             g_pLogObject->Record("Error: failed to stat config.ini, err=%d", errno);
         }
-    } 
-    else 
-    if (S_ISREG(statBuf.st_mode)) 
+    }
+    else
+    if (S_ISREG(statBuf.st_mode))
     {
         parse_config_file(strConfigFile.c_str(), g_ConfigItemVec);
     }
 
     ret = libusb_init(NULL);
-    if (ret < 0) 
+    if (ret < 0)
     {
-        if (g_pLogObject) 
+        if (g_pLogObject)
         {
             g_pLogObject->Record("Error: libusb_init failed, err=%d", ret);
             delete g_pLogObject;
@@ -3780,9 +3785,9 @@ int main(int argc, char* argv[])
     }
 
     pScan = new CRKScan();
-    if (!pScan) 
+    if (!pScan)
     {
-        if (g_pLogObject) 
+        if (g_pLogObject)
         {
             g_pLogObject->Record("Error: failed to create object for searching device");
             delete g_pLogObject;
@@ -3790,20 +3795,17 @@ int main(int argc, char* argv[])
         libusb_exit(NULL);
         return -2;
     }
-    
+
     pScan->SetVidPid();
 
-    if (argc == 1)
-        usage();
-    else 
-    if ( handle_command(argc, argv, pScan) )
+    if ( argc == 1 )
     {
-        printf( "Success.\n" );
-        STDOUTFLUSH;
+        usage();
     }
     else
+    if ( handle_command(argc, argv, pScan) == false )
     {
-        return -0xFF;
+        ret = -0xFF;
     }
 
     if (pScan)
@@ -3814,5 +3816,5 @@ int main(int argc, char* argv[])
 
     libusb_exit(NULL);
 
-    return 0;
+    return ret;
 }

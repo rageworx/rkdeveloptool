@@ -12,15 +12,15 @@ int file_stat(string strPath)
 {
     struct stat statBuf;
     int ret = stat(strPath.c_str(), &statBuf);
-    
-    if (ret != 0) 
+
+    if (ret != 0)
     {
         return STAT_NOT_EXIST;
     }
-    
+
     if (S_ISDIR(statBuf.st_mode))
         return STAT_DIR;
-    
+
     return STAT_FILE;
 }
 
@@ -48,27 +48,27 @@ CRKLog::CRKLog(string logFilePath, string logFileName, bool enable)
     EnableLog.getter(&CRKLog::GetEnableLog);
     EnableLog.setter(&CRKLog::SetEnableLog);
 
-    if (!opendir(logFilePath.c_str())) 
+    if (!opendir(logFilePath.c_str()))
     {
         m_path = "";
-    } 
-    else 
+    }
+    else
     {
         if (logFilePath[logFilePath.size() - 1] != '/') {
             logFilePath += '/';
         }
         m_path = logFilePath;
     }
-    
-    if (logFileName.size() <= 0) 
+
+    if (logFileName.size() <= 0)
     {
         m_name = "Log";
-    } 
+    }
     else
     {
         m_name = logFileName;
     }
-    
+
     m_enable = enable;
 }
 
@@ -79,7 +79,7 @@ CRKLog::~CRKLog()
 void CRKLog::Record(const char *lpFmt,...)
 {
     char szBuf[1024] = {0};
-    
+
     GET_FMT_STRING(lpFmt, szBuf);
     if ((m_enable) && (m_path.size() > 0))
     {
@@ -98,32 +98,33 @@ bool CRKLog::Write(string text)
     //localtime_r(&now, &timeNow);
     memcpy( &timeNow, localtime(&now), sizeof( struct tm ) );
 
-    snprintf( szDateTime, 100, "%04d-%02d-%02d-%02d-%02d-%02d.log", 
+    snprintf( szDateTime, 100, "%04d-%02d-%02d-%02d-%02d-%02d.log",
               timeNow.tm_year + 1900, timeNow.tm_mon + 1, timeNow.tm_mday,
               timeNow.tm_hour, timeNow.tm_min, timeNow.tm_sec );
 
     strName = m_path + m_name+szDateTime;
 
-    try 
+    try
     {
         file = fopen(strName.c_str(), "ab+");
-        
-        if (!file) 
+
+        if (!file)
         {
             return false;
         }
-        
-        sprintf(szDateTime, "%02d:%02d:%02d \t", timeNow.tm_hour, timeNow.tm_min, timeNow.tm_sec);
+
+        snprintf( szDateTime, 100,
+                  "%02d:%02d:%02d \t", timeNow.tm_hour, timeNow.tm_min, timeNow.tm_sec);
         text = szDateTime + text + "\r\n";
         fwrite(text.c_str(), 1, text.size() * sizeof(char), file);
         fclose(file);
-    } 
-    catch (...) 
+    }
+    catch (...)
     {
         fclose(file);
         return false;
     }
-    
+
     return true;
 }
 bool CRKLog::SaveBuffer(string fileName, PBYTE lpBuffer, DWORD dwSize)
@@ -140,14 +141,15 @@ bool CRKLog::SaveBuffer(string fileName, PBYTE lpBuffer, DWORD dwSize)
 
 void CRKLog::PrintBuffer(string &strOutput, PBYTE lpBuffer, DWORD dwSize, UINT uiLineCount)
 {
-    UINT i,count;
-    char strHex[32];
+    UINT i = 0;
+    UINT count = 0;
+    char strHex[32] = {0};
     strOutput = "";
-    for (i = 0, count = 0; i < dwSize; i++, count++) 
+    for ( i = 0,count = 0; i < dwSize; i++, count++)
     {
-        sprintf(strHex, "%X", lpBuffer[i]);
+        snprintf( strHex, 32, "%X", lpBuffer[i] );
         strOutput = strOutput + " " + strHex;
-        if (count >= uiLineCount) 
+        if (count >= uiLineCount)
         {
             strOutput += "\r\n";
             count = 0;
