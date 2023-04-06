@@ -88,4 +88,4 @@ private:
 	void WCHAR_To_char(WCHAR *src, char *dst, int len);
 };
 
-#endif
+#endif /// of  RKBOOT_HEADER
