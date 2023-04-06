@@ -257,8 +257,8 @@ void string_to_uuid(string strUUid, char *uuid)
             uuid[i / 2] += value;
     }
 
-    UINT32 *p32 = (UINT32*)uuid;
-    UINT16 *p16 = (UINT16*)(uuid + 4);
+    u32 *p32 = (u32*)uuid;
+    u16 *p16 = (u16*)(uuid + 4);
     *p32 = cpu_to_be32(*p32);
     *p16 = cpu_to_be16(*p16);
     p16 = (unsigned short *)(uuid + 6);
