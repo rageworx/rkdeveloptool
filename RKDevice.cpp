@@ -271,6 +271,7 @@ int CRKDevice::EraseEmmcByWriteLBA(DWORD dwSectorPos, DWORD dwCount)
 {
     int nWritten,iRet;
     BYTE emptyData[32 * SECTOR_SIZE] = {0};
+    memset(emptyData, 0xff, 32 * SECTOR_SIZE);
 
     while (dwCount > 0)
     {

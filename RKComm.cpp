@@ -9,9 +9,6 @@
 #include "RKLog.h"
 #include "Endian.h"
 
-#define BULK_EP_OUT     0x82    
-#define BULK_EP_IN      0x08    
-
 extern unsigned short CRC_CCITT(unsigned char* p, UINT CalculateNumber);
 
 CRKComm::CRKComm(CRKLog *pLog)
