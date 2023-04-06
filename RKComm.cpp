@@ -91,14 +91,17 @@ bool CRKUsbComm::InitializeUsb(STRUCT_RKDEVICE_DESC devDesc)
             for( size_t k = 0; k < pInterfaceDesc->bNumEndpoints; k++ ) 
             {
                 pEndpointDesc = pInterfaceDesc->endpoint+k;
-                
+
+#ifdef _WIN32                
                 //end point out always greater than 0x80 ... ??
-                if ((pEndpointDesc->bEndpointAddress & 0x80) == 0x80) 
+                if ((pEndpointDesc->bEndpointAddress & 0x80) == 0x80 )
+#else
+                if ((pEndpointDesc->bEndpointAddress & 0x80) == 0 )
+#endif 
                 {
                     if ( m_pipeBulkOut == 0 )
                     {
                         m_pipeBulkOut = pEndpointDesc->bEndpointAddress ;
-                        //m_pipeBulkOut = 2|LIBUSB_ENDPOINT_OUT;
                     }
                 }
                 else 
@@ -106,11 +109,10 @@ bool CRKUsbComm::InitializeUsb(STRUCT_RKDEVICE_DESC devDesc)
                     if ( m_pipeBulkIn == 0 )
                     {
                         m_pipeBulkIn = pEndpointDesc->bEndpointAddress;
-                        //m_pipeBulkIn = 1|LIBUSB_ENDPOINT_IN;
                     }
                 }
                 
-                if ((m_pipeBulkIn > 0) && (m_pipeBulkOut > 0)) 
+                if ((m_pipeBulkIn != 0) && (m_pipeBulkOut != 0)) 
                 {//found it
 #ifdef DEBUG            
                     printf("\n(debug)USB EndPoint Descriptors: ");
@@ -425,6 +427,7 @@ int CRKUsbComm::RKU_ReadChipInfo(BYTE* lpBuffer)
 
     return ERR_SUCCESS;
 }
+
 int CRKUsbComm::RKU_ReadFlashID(BYTE* lpBuffer)
 {
     if ((m_deviceDesc.emUsbType != RKUSB_LOADER) && (m_deviceDesc.emUsbType != RKUSB_MASKROM)) {
@@ -460,6 +463,7 @@ int CRKUsbComm::RKU_ReadFlashID(BYTE* lpBuffer)
 
     return ERR_SUCCESS;
 }
+
 int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer, UINT *puiRead)
 {
     if ((m_deviceDesc.emUsbType != RKUSB_LOADER) && (m_deviceDesc.emUsbType != RKUSB_MASKROM)) {
@@ -505,6 +509,7 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer, UINT *puiRead)
 
     return ERR_SUCCESS;
 }
+
 int CRKUsbComm::RKU_ReadCapability(BYTE* lpBuffer)
 {
     if ((m_deviceDesc.emUsbType != RKUSB_LOADER) && (m_deviceDesc.emUsbType != RKUSB_MASKROM)) {
