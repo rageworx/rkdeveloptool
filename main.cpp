@@ -496,81 +496,84 @@ bool parse_parameter(char *pParameter, PARAM_ITEM_VECTOR &vecItem, CONFIG_ITEM_V
     {
         getline(paramStream,strLine);
         line_size = strLine.size();
+        
+		if (line_size == 0)
+			continue;
+			
+		if (strLine[line_size - 1] == '\r')
+		{
+            strLine = strLine.substr(0, line_size - 1);
+        }
 
-        if (line_size > 0)
-        {
-            if (strLine[line_size - 1] == '\r')
+        strLine.erase(0, strLine.find_first_not_of(" "));
+        strLine.erase(strLine.find_last_not_of(" ") + 1);
+        
+		if (strLine.size()==0 )
+			continue;
+		if (strLine[0] == '#')
+			continue;
+                pos = strLine.find("uuid:");
+		if (pos != string::npos) 
+		{
+            strPartInfo = strLine.substr(pos+5);
+            bRet = ParseUuidInfo(strPartInfo, strPartName, strUUid);
+            if (bRet) 
             {
-                strLine = strLine.substr(0, line_size - 1);
+                strcpy(uuid_item.szItemName, strPartName.c_str());
+                string_to_uuid(strUUid,uuid_item.szItemValue);
+                vecUuidItem.push_back(uuid_item);
+            }
+            continue;
+        }
+
+        pos = strLine.find("mtdparts");
+
+        if (pos == string::npos) 
+        {
+            continue;
+        }
+
+        bFind = true;
+        posColon = strLine.find(':', pos);
+
+        if (posColon == string::npos) 
+        {
+            continue;
+        }
+
+        strPartition = strLine.substr(posColon + 1);
+        pos = 0;
+        posComma = strPartition.find(',', pos);
+
+        while (posComma != string::npos)
+        {
+            strPartInfo = strPartition.substr(pos, posComma - pos);
+            bRet = ParsePartitionInfo(strPartInfo, strPartName, uiPartOffset, uiPartSize);
+
+            if (bRet)
+            {
+                strcpy(item.szItemName, strPartName.c_str());
+                item.uiItemOffset = uiPartOffset;
+                item.uiItemSize = uiPartSize;
+                vecItem.push_back(item);
             }
 
-            strLine.erase(0, strLine.find_first_not_of(" "));
-            strLine.erase(strLine.find_last_not_of(" ") + 1);
+            pos = posComma + 1;
+            posComma = strPartition.find(',', pos);
+        }
 
-            if ( (strLine.size()==0 ) && (strLine[0] == '#') )
+        strPartInfo = strPartition.substr(pos);
+
+        if (strPartInfo.size() > 0)
+        {
+            bRet = ParsePartitionInfo(strPartInfo, strPartName, uiPartOffset, uiPartSize);
+
+            if (bRet)
             {
-                pos = strLine.find("uuid:");
-
-                if (pos != string::npos)
-                {
-                    strPartInfo = strLine.substr(pos+5);
-                    bRet = ParseUuidInfo(strPartInfo, strPartName, strUUid);
-                    if (bRet) {
-                        strcpy(uuid_item.szItemName, strPartName.c_str());
-                        string_to_uuid(strUUid,uuid_item.szItemValue);
-                        vecUuidItem.push_back(uuid_item);
-                    }
-                    continue;
-                }
-
-                pos = strLine.find("mtdparts");
-
-                if (pos == string::npos) {
-                    continue;
-                }
-
-                bFind = true;
-                posColon = strLine.find(':', pos);
-
-                if (posColon == string::npos) {
-                    continue;
-                }
-
-                strPartition = strLine.substr(posColon + 1);
-                pos = 0;
-                posComma = strPartition.find(',', pos);
-
-                while (posComma != string::npos)
-                {
-                    strPartInfo = strPartition.substr(pos, posComma - pos);
-                    bRet = ParsePartitionInfo(strPartInfo, strPartName, uiPartOffset, uiPartSize);
-
-                    if (bRet)
-                    {
-                        strcpy(item.szItemName, strPartName.c_str());
-                        item.uiItemOffset = uiPartOffset;
-                        item.uiItemSize = uiPartSize;
-                        vecItem.push_back(item);
-                    }
-
-                    pos = posComma + 1;
-                    posComma = strPartition.find(',', pos);
-                }
-
-                strPartInfo = strPartition.substr(pos);
-
-                if (strPartInfo.size() > 0)
-                {
-                    bRet = ParsePartitionInfo(strPartInfo, strPartName, uiPartOffset, uiPartSize);
-
-                    if (bRet)
-                    {
-                        strcpy(item.szItemName, strPartName.c_str());
-                        item.uiItemOffset = uiPartOffset;
-                        item.uiItemSize = uiPartSize;
-                        vecItem.push_back(item);
-                    }
-                }
+                strcpy(item.szItemName, strPartName.c_str());
+                item.uiItemOffset = uiPartOffset;
+                item.uiItemSize = uiPartSize;
+                vecItem.push_back(item);
             }
         }
     }
@@ -2504,6 +2507,7 @@ Exit_PrintGpt:
         delete pComm;
     return bSuccess;
 }
+
 bool print_parameter(STRUCT_RKDEVICE_DESC &dev)
 {
     if (!check_device_type(dev, RKUSB_LOADER | RKUSB_MASKROM))
