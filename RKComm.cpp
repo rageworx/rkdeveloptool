@@ -211,16 +211,18 @@ bool CRKUsbComm::RKU_Write(BYTE* lpBuffer, DWORD dwSize)
 {
     int iRet = -1;
     int nWrite = -1;
-    
+#ifdef DEUBG
     printf( "(debug)libusb_bulk_transfer, end point=0x%02X, 0x%lX, %u bytes, timeout = %u.\n",
             m_pipeBulkIn, lpBuffer, dwSize, CMD_TIMEOUT );
     fflush( stdout );
-    
+#endif /// of DEBUG
     iRet = libusb_bulk_transfer((libusb_device_handle *)m_pUsbHandle, m_pipeBulkIn, lpBuffer, dwSize, &nWrite, CMD_TIMEOUT);
-    
-    printf( "return = %d\n", iRet );
+
+#ifdef DEBUG
+    printf( "libusb_bulk_transfer() return = %d\n", iRet );
     fflush( stdout );
-    
+#endif
+
     if (iRet != 0) 
     {
         if (m_log) 
