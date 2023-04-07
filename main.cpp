@@ -4249,12 +4249,16 @@ int main(int argc, char* argv[])
         parse_config_file(strConfigFile.c_str(), g_ConfigItemVec);
     }
 
+#if (LIBUSB_API_VERSION >= 0x0100010A)
     // new libusb has depreciate issue of libusb_init() API.
     // -- raph.K.
     libusb_init_option lusbopt[1];
     lusbopt[0].option = LIBUSB_OPTION_LOG_LEVEL;
     lusbopt[0].value.ival = 0;
     ret = libusb_init_context( NULL, lusbopt, 1 );
+#else
+    ret = libusb_init( NULL );
+#endif
     if (ret < 0) 
     {
         if (g_pLogObject) 
