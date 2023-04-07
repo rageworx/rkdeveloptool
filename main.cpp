@@ -70,65 +70,75 @@ void usage()
     printf("TagSPL:\t\t\ttagspl <tag> <U-Boot SPL>\r\n");
     printf("-------------------------------------------------------\r\n\r\n");
 }
+
 void ProgressInfoProc(DWORD deviceLayer, ENUM_PROGRESS_PROMPT promptID, long long totalValue, long long currentValue, ENUM_CALL_STEP emCall)
 {
     string strInfoText="";
     char szText[256];
-    switch (promptID) {
-    case TESTDEVICE_PROGRESS:
-        snprintf( szText, 256,
-                  "Test Device total %lld, current %lld", 
-                  totalValue, currentValue );
-        strInfoText = szText;
-        break;
-    case LOWERFORMAT_PROGRESS:
-        snprintf( szText, 256,
-                  "Lowerformat Device total %lld, current %lld", 
-                  totalValue, currentValue );
-        strInfoText = szText;
-        break;
-    case DOWNLOADIMAGE_PROGRESS:
-        snprintf( szText, 256, 
-                  "Download Image total %lldK, current %lldK", 
-                  totalValue/1024, currentValue/1024 );
-        strInfoText = szText;
-        break;
-    case CHECKIMAGE_PROGRESS:
-        snprintf( szText, 256, 
-                  "Check Image total %lldK, current %lldK", 
-                  totalValue/1024, currentValue/1024 );
-        strInfoText = szText;
-        break;
-    case TAGBADBLOCK_PROGRESS:
-        snprintf( szText, 256, 
-                  "Tag Bad Block total %lld, current %lld", 
-                  totalValue, currentValue);
-        strInfoText = szText;
-        break;
-    case TESTBLOCK_PROGRESS:
-        snprintf( szText, 256, 
-                  "Test Block total %lld, current %lld", 
-                  totalValue, currentValue);
-        strInfoText = szText;
-        break;
-    case ERASEFLASH_PROGRESS:
-        snprintf( szText, 256, 
-                  "Erase Flash total %lld, current %lld", 
-                  totalValue, currentValue);
-        strInfoText = szText;
-        break;
-    case ERASESYSTEM_PROGRESS:
-        snprintf( szText, 256, 
-                  "Erase System partition total %lld, current %lld", 
-                  totalValue, currentValue);
-        strInfoText = szText;
-        break;
-    case ERASEUSERDATA_PROGRESS:
-        snprintf( szText, 256,
-                  "<LocationID=%x> Erase Userdata partition total %lld, current %lld", 
-                  deviceLayer, totalValue, currentValue);
-        strInfoText = szText;
-        break;
+    switch (promptID) 
+    {
+        case TESTDEVICE_PROGRESS:
+            snprintf( szText, 256,
+                      "Test Device total %lld, current %lld", 
+                      totalValue, currentValue );
+            strInfoText = szText;
+            break;
+            
+        case LOWERFORMAT_PROGRESS:
+            snprintf( szText, 256,
+                      "Lowerformat Device total %lld, current %lld", 
+                      totalValue, currentValue );
+            strInfoText = szText;
+            break;
+            
+        case DOWNLOADIMAGE_PROGRESS:
+            snprintf( szText, 256, 
+                      "Download Image total %lldK, current %lldK", 
+                      totalValue/1024, currentValue/1024 );
+            strInfoText = szText;
+            break;
+            
+        case CHECKIMAGE_PROGRESS:
+            snprintf( szText, 256, 
+                      "Check Image total %lldK, current %lldK", 
+                      totalValue/1024, currentValue/1024 );
+            strInfoText = szText;
+            break;
+            
+        case TAGBADBLOCK_PROGRESS:
+            snprintf( szText, 256, 
+                      "Tag Bad Block total %lld, current %lld", 
+                      totalValue, currentValue);
+            strInfoText = szText;
+            break;
+            
+        case TESTBLOCK_PROGRESS:
+            snprintf( szText, 256, 
+                      "Test Block total %lld, current %lld", 
+                      totalValue, currentValue);
+            strInfoText = szText;
+            break;
+            
+        case ERASEFLASH_PROGRESS:
+            snprintf( szText, 256, 
+                      "Erase Flash total %lld, current %lld", 
+                      totalValue, currentValue);
+            strInfoText = szText;
+            break;
+            
+        case ERASESYSTEM_PROGRESS:
+            snprintf( szText, 256, 
+                      "Erase System partition total %lld, current %lld", 
+                      totalValue, currentValue);
+            strInfoText = szText;
+            break;
+            
+        case ERASEUSERDATA_PROGRESS:
+            snprintf( szText, 256,
+                      "<LocationID=%x> Erase Userdata partition total %lld, current %lld", 
+                      deviceLayer, totalValue, currentValue);
+            strInfoText = szText;
+            break;
     }
 
     if (strInfoText.size() > 0)

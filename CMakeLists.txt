@@ -2,7 +2,7 @@
 set (PROJECT_NAME "rkDevelopTool_Mac")
 
 # The version number.
-set (RKDevelopTool_Mac_PACKAGE_VERSION "1.3")
+set (RKDevelopTool_Mac_PACKAGE_VERSION "1.33")
 
 file (GLOB LOCAL_CPP_FILES *.cpp)
 set (SOURCE_FILES ${SOURCE_FILES} ${LOCAL_CPP_FILES})
@@ -11,8 +11,9 @@ file (GLOB LOCAL_H_FILES *.h)
 set (HEADER_FILES ${HEADER_FILES} ${LOCAL_H_FILES})
 
 # Set your libusb path
-set (libusb_INCLUDE_DIR "/usr/local/Cellar/libusb/1.0.22/include/libusb-1.0/")
-set (libusb_STATIC "/usr/local/Cellar/libusb/1.0.22/lib/")
+# latest version of libusb build is 26.
+set (libusb_INCLUDE_DIR "/usr/local/Cellar/libusb/1.0.26/include/libusb-1.0/")
+set (libusb_STATIC "/usr/local/Cellar/libusb/1.0.26/lib/")
 
 # Set your libiconv path
 set (libiconv_INCLUDE_DIR "/usr/local/opt/libiconv/include/")
