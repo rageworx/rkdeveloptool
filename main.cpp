@@ -4205,7 +4205,7 @@ int main(int argc, char* argv[])
     struct stat statBuf;
 
 #ifndef _WIN32
-    snprintf( szProgramProcPath, 256, "/proc/%d/exe", getpid());
+    snprintf( szProgramProcPath, 100, "/proc/%d/exe", getpid());
     if (readlink(szProgramProcPath, szProgramDir, 256) == -1)
         strcpy(szProgramDir, ".");
     else {
