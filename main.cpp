@@ -46,29 +46,30 @@ u8 test_gpt_head[] = {
 
 void usage()
 {
-    printf("\r\n---------------------Tool Usage ---------------------\r\n");
-    printf("Help:\t\t\t-h or --help\r\n");
-    printf("Version:\t\t-v or --version\r\n");
-    printf("ListDevice:\t\tld\r\n");
-    printf("DownloadBoot:\t\tdb <Loader>\r\n");
-    printf("UpgradeLoader:\t\tul <Loader>\r\n");
-    printf("ReadLBA:\t\trl  <BeginSec> <SectorLen> <File>\r\n");
-    printf("WriteLBA:\t\twl  <BeginSec> <File>\r\n");
-    printf("WriteLBA:\t\twlx  <PartitionName> <File>\r\n");
-    printf("WriteGPT:\t\tgpt <gpt partition table>\r\n");
-    printf("WriteParameter:\t\tprm <parameter>\r\n");
-    printf("PrintPartition:\t\tppt \r\n");
-    printf("EraseFlash:\t\tef \r\n");
-    printf("TestDevice:\t\ttd\r\n");
-    printf("ResetDevice:\t\trd [subcode]\r\n");
-    printf("ReadFlashID:\t\trid\r\n");
-    printf("ReadFlashInfo:\t\trfi\r\n");
-    printf("ReadChipInfo:\t\trci\r\n");
-    printf("ReadCapability:\t\trcb\r\n");
-    printf("PackBootLoader:\t\tpack\r\n");
-    printf("UnpackBootLoader:\tunpack <boot loader>\r\n");
-    printf("TagSPL:\t\t\ttagspl <tag> <U-Boot SPL>\r\n");
-    printf("-------------------------------------------------------\r\n\r\n");
+    printf("Rockchip DevTool customized, Raphael Kim\n");
+    printf("\n---------------------Tool Usage ---------------------\n");
+    printf("Help:\t\t\t-h or --help\n");
+    printf("Version:\t\t-v or --version\n");
+    printf("ListDevice:\t\tld\n");
+    printf("DownloadBoot:\t\tdb <Loader>\n");
+    printf("UpgradeLoader:\t\tul <Loader>\n");
+    printf("ReadLBA:\t\trl  <BeginSec> <SectorLen> <File>\n");
+    printf("WriteLBA:\t\twl  <BeginSec> <File>\n");
+    printf("WriteLBA:\t\twlx  <PartitionName> <File>\n");
+    printf("WriteGPT:\t\tgpt <gpt partition table>\n");
+    printf("WriteParameter:\t\tprm <parameter>\n");
+    printf("PrintPartition:\t\tppt \n");
+    printf("EraseFlash:\t\tef \n");
+    printf("TestDevice:\t\ttd\n");
+    printf("ResetDevice:\t\trd [subcode]\n");
+    printf("ReadFlashID:\t\trid\n");
+    printf("ReadFlashInfo:\t\trfi\n");
+    printf("ReadChipInfo:\t\trci\n");
+    printf("ReadCapability:\t\trcb\n");
+    printf("PackBootLoader:\t\tpack\n");
+    printf("UnpackBootLoader:\tunpack <boot loader>\n");
+    printf("TagSPL:\t\t\ttagspl <tag> <U-Boot SPL>\n");
+    printf("-------------------------------------------------------\n\n");
 }
 
 void ProgressInfoProc(DWORD deviceLayer, ENUM_PROGRESS_PROMPT promptID, long long totalValue, long long currentValue, ENUM_CALL_STEP emCall)
@@ -145,7 +146,7 @@ void ProgressInfoProc(DWORD deviceLayer, ENUM_PROGRESS_PROMPT promptID, long lon
     {
         CURSOR_MOVEUP_LINE(1);
         CURSOR_DEL_LINE;
-        printf("%s\r\n", strInfoText.c_str());
+        printf("%s\n", strInfoText.c_str());
     }
 
     if (emCall == CALL_LAST)
@@ -174,7 +175,7 @@ void PrintData(PBYTE pData, int nSize)
         if(i % 16 == 0)
         {
             if(i / 16 > 0)
-                printf("     %s\r\n", szPrint);
+                printf("     %s\n", szPrint);
 
             printf("%08d ", i / 16);
         }
@@ -184,7 +185,7 @@ void PrintData(PBYTE pData, int nSize)
     }
 
     if(i / 16 > 0)
-        printf("     %s\r\n", szPrint);
+        printf("     %s\n", szPrint);
 }
 
 int find_config_item(CONFIG_ITEM_VECTOR &vecItems, const char *pszName)
@@ -291,7 +292,7 @@ bool parse_config_file(const char *pConfigFile, CONFIG_ITEM_VECTOR &vecItem)
     if( !file )
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, pConfigFile);
+            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\n", __func__, errno, pConfigFile);
         return false;
     }
 
@@ -314,7 +315,7 @@ bool parse_config_file(const char *pConfigFile, CONFIG_ITEM_VECTOR &vecItem)
     if (iRead != iFileSize)
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno, iRead, iFileSize);
+            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\n", __func__, errno, iRead, iFileSize);
         fclose(file);
         delete []pConfigBuf;
         return false;
@@ -527,7 +528,7 @@ bool parse_parameter_file(char *pParamFile, PARAM_ITEM_VECTOR &vecItem, CONFIG_I
     if( !file ) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, pParamFile);
+            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\n", __func__, errno, pParamFile);
         return false;
     }
 
@@ -547,7 +548,7 @@ bool parse_parameter_file(char *pParamFile, PARAM_ITEM_VECTOR &vecItem, CONFIG_I
     if (iRead != iFileSize) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno,iRead,iFileSize);
+            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\n", __func__, errno,iRead,iFileSize);
         fclose(file);
         delete []pParamBuf;
         return false;
@@ -570,7 +571,7 @@ bool is_sparse_image(char *szImage)
     if( !file ) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, szImage);
+            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\n", __func__, errno, szImage);
         return false;
     }
 
@@ -578,7 +579,7 @@ bool is_sparse_image(char *szImage)
     if (uiRead != sizeof(head)) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno, uiRead, sizeof(head));
+            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\n", __func__, errno, uiRead, sizeof(head));
         fclose(file);
         return false;
     }
@@ -598,7 +599,7 @@ bool is_ubifs_image(char *szImage)
     if( !file ) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, szImage);
+            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\n", __func__, errno, szImage);
         return false;
     }
 
@@ -607,7 +608,7 @@ bool is_ubifs_image(char *szImage)
     if (uiRead != sizeof(magic)) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\r\n", __func__, errno, uiRead, sizeof(magic));
+            g_pLogObject->Record("%s failed, err=%d, read=%d, total=%d\n", __func__, errno, uiRead, sizeof(magic));
         fclose(file);
         return false;
     }
@@ -776,7 +777,7 @@ bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
     if( !file ) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, pParamFile);
+            g_pLogObject->Record("%s failed, err=%d, can't open file: %s\n", __func__, errno, pParamFile);
         return false;
     }
 
@@ -788,7 +789,7 @@ bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
     if (iFileSize != 67 * SECTOR_SIZE) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed, wrong size file: %s\r\n", __func__, pParamFile);
+            g_pLogObject->Record("%s failed, wrong size file: %s\n", __func__, pParamFile);
         fclose(file);
         return false;
     }
@@ -799,7 +800,7 @@ bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
     if (iRead != 34 * SECTOR_SIZE) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed,read master gpt err=%d, read=%d, total=%d\r\n", __func__, errno,iRead, 34 * SECTOR_SIZE);
+            g_pLogObject->Record("%s failed,read master gpt err=%d, read=%d, total=%d\n", __func__, errno,iRead, 34 * SECTOR_SIZE);
         fclose(file);
         return false;
     }
@@ -808,7 +809,7 @@ bool load_gpt_buffer(char *pParamFile, u8 *master, u8 *backup)
     if (iRead != 33 * SECTOR_SIZE) 
     {
         if (g_pLogObject)
-            g_pLogObject->Record("%s failed,read backup gpt err=%d, read=%d, total=%d\r\n", __func__, errno,iRead, 33 * SECTOR_SIZE);
+            g_pLogObject->Record("%s failed,read backup gpt err=%d, read=%d, total=%d\n", __func__, errno,iRead, 33 * SECTOR_SIZE);
         fclose(file);
         return false;
     }
@@ -1002,7 +1003,7 @@ bool check_device_type(STRUCT_RKDEVICE_DESC &dev, UINT uiSupportType)
     ERROR_COLOR_ATTR;
     printf("The device does not support this operation!");
     NORMAL_COLOR_ATTR;
-    printf("\r\n");
+    printf("\n");
 
     return false;
 }
@@ -1012,7 +1013,7 @@ bool MakeParamBuffer(char *pParamFile, char* &pParamData)
     if( !file )
     {
         if (g_pLogObject)
-            g_pLogObject->Record("MakeParamBuffer failed,err=%d,can't open file: %s\r\n", errno, pParamFile);
+            g_pLogObject->Record("MakeParamBuffer failed,err=%d,can't open file: %s\n", errno, pParamFile);
         return false;
     }
 
@@ -1037,7 +1038,7 @@ bool MakeParamBuffer(char *pParamFile, char* &pParamData)
     if (iRead!=iFileSize)
     {
         if (g_pLogObject)
-            g_pLogObject->Record("MakeParamBuffer failed,err=%d,read=%d,total=%d\r\n", errno, iRead, iFileSize);
+            g_pLogObject->Record("MakeParamBuffer failed,err=%d,read=%d,total=%d\n", errno, iRead, iFileSize);
         fclose(file);
         delete []pParamBuf;
         return false;
@@ -1068,7 +1069,7 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -1077,11 +1078,11 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Generating parameter failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
-    printf("Writing parameter...\r\n");
+    printf("Writing parameter...\n");
     nParamSize = *(UINT *)(pParamBuf+4) + 12;
     nParamSec = BYTE2SECTOR(nParamSize);
     if (nParamSec > 1024) 
@@ -1089,7 +1090,7 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("parameter is too large!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -1101,7 +1102,7 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Writing parameter failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -1109,7 +1110,7 @@ bool write_parameter(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
 
     CURSOR_MOVEUP_LINE(1);
     CURSOR_DEL_LINE;
-    printf("Writing parameter succeeded.\r\n");
+    printf("Writing parameter succeeded.\n");
 
     return bSuccess;
 }
@@ -1133,11 +1134,11 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
-    printf("Writing gpt...\r\n");
+    printf("Writing gpt...\n");
 
     //1.get flash info
     iRet = pComm->RKU_ReadFlashInfo(flash_info);
@@ -1146,7 +1147,7 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Reading Flash Info failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -1158,7 +1159,7 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
             ERROR_COLOR_ATTR;
             printf("Loading partition image failed!");
             NORMAL_COLOR_ATTR;
-            printf("\r\n");
+            printf("\n");
             return bSuccess;
         }
         update_gpt_disksize(master_gpt, backup_gpt, total_size_sector);
@@ -1172,7 +1173,7 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
             ERROR_COLOR_ATTR;
             printf("Parsing parameter failed!");
             NORMAL_COLOR_ATTR;
-            printf("\r\n");
+            printf("\n");
             return bSuccess;
         }
 
@@ -1190,7 +1191,7 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Writing master gpt failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -1200,14 +1201,14 @@ bool write_gpt(STRUCT_RKDEVICE_DESC &dev, char *szParameter)
         ERROR_COLOR_ATTR;
         printf("Writing backup gpt failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
     bSuccess = true;
     CURSOR_MOVEUP_LINE(1);
     CURSOR_DEL_LINE;
-    printf("Writing gpt succeeded.\r\n");
+    printf("Writing gpt succeeded.\n");
     return bSuccess;
 }
 
@@ -2179,7 +2180,7 @@ bool download_boot(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
         ERROR_COLOR_ATTR;
         printf("Opening loader failed, exiting download boot!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     } 
     else 
@@ -2198,7 +2199,7 @@ bool download_boot(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
             ERROR_COLOR_ATTR;
             printf("Creating Comm Object failed!");
             NORMAL_COLOR_ATTR;
-            printf("\r\n");
+            printf("\n");
 
             return bSuccess;
         }
@@ -2215,13 +2216,13 @@ bool download_boot(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
             ERROR_COLOR_ATTR;
             printf("Creating device object failed!");
             NORMAL_COLOR_ATTR;
-            printf("\r\n");
+            printf("\n");
 
             return bSuccess;
         }
 
         pDevice->SetObject(pImage, pComm, g_pLogObject);
-        printf("Downloading bootloader...\r\n");
+        printf("Downloading bootloader...\n");
         iRet = pDevice->DownloadBoot();
 
         CURSOR_MOVEUP_LINE(1);
@@ -2229,11 +2230,11 @@ bool download_boot(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
         if (iRet == 0) 
         {
             bSuccess = true;
-            printf("Downloading bootloader succeeded.\r\n");
+            printf("Downloading bootloader succeeded.\n");
         }
         else
         {
-            printf("Downloading bootloader failed!\r\n");
+            printf("Downloading bootloader failed!\n");
         }
 
         if (pImage)
@@ -2275,7 +2276,7 @@ bool upgrade_loader(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
         ERROR_COLOR_ATTR;
         printf("Opening loader failed, exiting upgrade loader!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         goto Exit_UpgradeLoader;
     } 
     else 
@@ -2288,12 +2289,12 @@ bool upgrade_loader(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
             ERROR_COLOR_ATTR;
             printf("Creating Comm Object failed!");
             NORMAL_COLOR_ATTR;
-            printf("\r\n");
+            printf("\n");
 
             goto Exit_UpgradeLoader;
         }
 
-        printf("Upgrading loader...\r\n");
+        printf("Upgrading loader...\n");
         index = pBoot->GetIndexByName(ENTRYLOADER, loaderCodeName);
         if (index == -1) 
         {
@@ -2400,7 +2401,7 @@ bool upgrade_loader(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
                 ERROR_COLOR_ATTR;
                 printf("Device not support to upgrade the loader!");
                 NORMAL_COLOR_ATTR;
-                printf("\r\n");
+                printf("\n");
 
                 goto Exit_UpgradeLoader;
             }
@@ -2426,7 +2427,7 @@ bool upgrade_loader(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
             ERROR_COLOR_ATTR;
             printf("Allocating memory failed!");
             NORMAL_COLOR_ATTR;
-            printf("\r\n");
+            printf("\n");
 
             goto Exit_UpgradeLoader;
         }
@@ -2462,7 +2463,7 @@ bool upgrade_loader(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
                 ERROR_COLOR_ATTR;
                 printf("Making idblock failed!");
                 NORMAL_COLOR_ATTR;
-                printf("\r\n");
+                printf("\n");
 
                 goto Exit_UpgradeLoader;
             }
@@ -2475,11 +2476,11 @@ bool upgrade_loader(STRUCT_RKDEVICE_DESC &dev, char *szLoader)
         {
             //pComm->Reset_Usb_Device();
             bSuccess = true;
-            printf("Upgrading loader succeeded.\r\n");
+            printf("Upgrading loader succeeded.\n");
         } 
         else 
         {
-            printf("Upgrading loader failed!\r\n");
+            printf("Upgrading loader failed!\n");
             goto Exit_UpgradeLoader;
         }
     }
@@ -2528,7 +2529,7 @@ bool print_gpt(STRUCT_RKDEVICE_DESC &dev)
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
 
         return bSuccess;
     }
@@ -2546,12 +2547,12 @@ bool print_gpt(STRUCT_RKDEVICE_DESC &dev)
     {
         if (g_pLogObject)
                 g_pLogObject->Record("Error: read gpt failed, err=%d", iRet);
-        printf("Read GPT failed!\r\n");
+        printf("Read GPT failed!\n");
         goto Exit_PrintGpt;
     }
 
-    printf("**********Partition Info(GPT)**********\r\n");
-    printf("NO  LBA       Name                \r\n");
+    printf("**********Partition Info(GPT)**********\n");
+    printf("NO  LBA       Name                \n");
     for (i = 0; i < le32_to_cpu(gptHead->num_partition_entries); i++) 
     {
         gptEntry = (gpt_entry *)(master_gpt + 2 * SECTOR_SIZE + i * GPT_ENTRY_SIZE);
@@ -2567,7 +2568,7 @@ bool print_gpt(STRUCT_RKDEVICE_DESC &dev)
             j++;
         }
 
-        printf("%02d  %08X  %s\r\n", i, (u32)le64_to_cpu(gptEntry->starting_lba), partName);
+        printf("%02d  %08X  %s\n", i, (u32)le64_to_cpu(gptEntry->starting_lba), partName);
     }
 
     bSuccess = true;
@@ -2597,7 +2598,7 @@ bool print_parameter(STRUCT_RKDEVICE_DESC &dev)
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
 
         return bSuccess;
     }
@@ -2615,7 +2616,7 @@ bool print_parameter(STRUCT_RKDEVICE_DESC &dev)
     {
         if (g_pLogObject)
                 g_pLogObject->Record("Error: read parameter failed, err=%d", iRet);
-        printf("Read parameter failed!\r\n");
+        printf("Read parameter failed!\n");
 
         goto Exit_PrintParam;
     }
@@ -2629,17 +2630,17 @@ bool print_parameter(STRUCT_RKDEVICE_DESC &dev)
         if (g_pLogObject)
                 g_pLogObject->Record("Error: parse parameter failed");
 
-        printf("Parse parameter failed!\r\n");
+        printf("Parse parameter failed!\n");
 
         goto Exit_PrintParam;
     }
 
-    printf("**********Partition Info(parameter)**********\r\n");
-    printf("NO  LBA       Name                \r\n");
+    printf("**********Partition Info(parameter)**********\n");
+    printf("NO  LBA       Name                \n");
 
     for (i = 0; i < vecParamItem.size(); i++) 
     {
-        printf("%02d  %08X  %s\r\n", i, vecParamItem[i].uiItemOffset, vecParamItem[i].szItemName);
+        printf("%02d  %08X  %s\n", i, vecParamItem[i].uiItemOffset, vecParamItem[i].szItemName);
     }
 
     bSuccess = true;
@@ -2674,7 +2675,7 @@ bool erase_flash(STRUCT_RKDEVICE_DESC &dev)
         ERROR_COLOR_ATTR;
         printf("Creating Comm Object failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -2690,7 +2691,7 @@ bool erase_flash(STRUCT_RKDEVICE_DESC &dev)
         ERROR_COLOR_ATTR;
         printf("Creating device object failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
 
         return bSuccess;
     }
@@ -2698,7 +2699,7 @@ bool erase_flash(STRUCT_RKDEVICE_DESC &dev)
     pDevice->SetObject(pImage, pComm, g_pLogObject);
     pDevice->CallBackPointer = ProgressInfoProc;
 
-    printf("Starting to erase flash...\r\n");
+    printf("Starting to erase flash...\n");
     bRet = pDevice->GetFlashInfo();
     if (!bRet) 
     {
@@ -2711,7 +2712,7 @@ bool erase_flash(STRUCT_RKDEVICE_DESC &dev)
         ERROR_COLOR_ATTR;
         printf("Getting flash info from device failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
 
         return bSuccess;
     }
@@ -2733,7 +2734,7 @@ bool erase_flash(STRUCT_RKDEVICE_DESC &dev)
         CURSOR_MOVEUP_LINE(1);
         CURSOR_DEL_LINE;
         bSuccess = true;
-        printf("Erasing flash complete.\r\n");
+        printf("Erasing flash complete.\n");
     }
 
     return bSuccess;
@@ -2756,17 +2757,17 @@ bool test_device(STRUCT_RKDEVICE_DESC &dev)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error: RKU_TestDeviceReady failed, err=%d", iRet);
-            printf("Test Device failed!\r\n");
+            printf("Test Device failed!\n");
         } 
         else 
         {
             bSuccess = true;
-            printf("Test Device OK.\r\n");
+            printf("Test Device OK.\n");
         }
     } 
     else 
     {
-        printf("Test Device quit, creating comm object failed!\r\n");
+        printf("Test Device quit, creating comm object failed!\n");
     }
 
     if (pComm) 
@@ -2794,17 +2795,17 @@ bool reset_device(STRUCT_RKDEVICE_DESC &dev, BYTE subCode = RST_NONE_SUBCODE)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error: RKU_ResetDevice failed, err=%d", iRet);
-            printf("Reset Device failed!\r\n");
+            printf("Reset Device failed!\n");
         } 
         else 
         {
             bSuccess = true;
-            printf("Reset Device OK.\r\n");
+            printf("Reset Device OK.\n");
         }
     } 
     else 
     {
-        printf("Reset Device quit, creating comm object failed!\r\n");
+        printf("Reset Device quit, creating comm object failed!\n");
     }
 
     if (pComm) 
@@ -2834,17 +2835,17 @@ bool read_flash_id(STRUCT_RKDEVICE_DESC &dev)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error: RKU_ReadFlashID failed, err=%d", iRet);
-            printf("Reading flash ID failed!\r\n");
+            printf("Reading flash ID failed!\n");
         } 
         else 
         {
-            printf("Flash ID: %02X %02X %02X %02X %02X\r\n", flashID[0], flashID[1], flashID[2], flashID[3], flashID[4]);
+            printf("Flash ID: %02X %02X %02X %02X %02X\n", flashID[0], flashID[1], flashID[2], flashID[3], flashID[4]);
             bSuccess = true;
         }
     } 
     else 
     {
-        printf("Read Flash ID quit, creating comm object failed!\r\n");
+        printf("Read Flash ID quit, creating comm object failed!\n");
     }
 
     if (pComm) 
@@ -2875,26 +2876,26 @@ bool read_flash_info(STRUCT_RKDEVICE_DESC &dev)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error: RKU_ReadFlashInfo failed, err=%d", iRet);
-            printf("Read Flash Info failed!\r\n");
+            printf("Read Flash Info failed!\n");
         } 
         else 
         {
-            printf("Flash Info:\r\n");
+            printf("Flash Info:\n");
             if (info.bManufCode <= 7) 
             {
-                printf("\tManufacturer: %s, value=%02X\r\n", szManufName[info.bManufCode], info.bManufCode);
+                printf("\tManufacturer: %s, value=%02X\n", szManufName[info.bManufCode], info.bManufCode);
             }
             else
             {
-                printf("\tManufacturer: %s, value=%02X\r\n", "Unknown", info.bManufCode);
+                printf("\tManufacturer: %s, value=%02X\n", "Unknown", info.bManufCode);
             }
 
-            printf("\tFlash Size: %d MB\r\n", info.uiFlashSize / 2 / 1024);
-            printf("\tFlash Size: %d Sectors\r\n", info.uiFlashSize);
-            printf("\tBlock Size: %d KB\r\n", info.usBlockSize / 2);
-            printf("\tPage Size: %d KB\r\n", info.bPageSize / 2);
-            printf("\tECC Bits: %d\r\n", info.bECCBits);
-            printf("\tAccess Time: %d\r\n", info.bAccessTime);
+            printf("\tFlash Size: %d MB\n", info.uiFlashSize / 2 / 1024);
+            printf("\tFlash Size: %d Sectors\n", info.uiFlashSize);
+            printf("\tBlock Size: %d KB\n", info.usBlockSize / 2);
+            printf("\tPage Size: %d KB\n", info.bPageSize / 2);
+            printf("\tECC Bits: %d\n", info.bECCBits);
+            printf("\tAccess Time: %d\n", info.bAccessTime);
             printf("\tFlash CS: ");
 
             for(int i = 0; i < 8; i++) 
@@ -2903,13 +2904,13 @@ bool read_flash_info(STRUCT_RKDEVICE_DESC &dev)
                     printf("Flash<%d> ", i);
             }
 
-            printf("\r\n");
+            printf("\n");
             bSuccess = true;
         }
     }
     else 
     {
-        printf("Read Flash Info quit, creating comm object failed!\r\n");
+        printf("Read Flash Info quit, creating comm object failed!\n");
     }
 
     if (pComm) 
@@ -2939,19 +2940,19 @@ bool read_chip_info(STRUCT_RKDEVICE_DESC &dev)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error: RKU_ReadChipInfo failed, err=%d", iRet);
-            printf("Read Chip Info failed!\r\n");
+            printf("Read Chip Info failed!\n");
         } 
         else 
         {
             string strChipInfo;
             g_pLogObject->PrintBuffer(strChipInfo, chipInfo, 16, 16);
-            printf("Chip Info: %s\r\n", strChipInfo.c_str());
+            printf("Chip Info: %s\n", strChipInfo.c_str());
             bSuccess = true;
         }
     } 
     else 
     {
-        printf("Read Chip Info quit, creating comm object failed!\r\n");
+        printf("Read Chip Info quit, creating comm object failed!\n");
     }
 
     if (pComm) 
@@ -2982,51 +2983,51 @@ bool read_capability(STRUCT_RKDEVICE_DESC &dev)
         {
             if (g_pLogObject)
                 g_pLogObject->Record("Error:read_capability failed,err=%d", iRet);
-            printf("Read capability Fail!\r\n");
+            printf("Read capability Fail!\n");
         } 
         else 
         {
-            printf("Capability:%02X %02X %02X %02X %02X %02X %02X %02X \r\n",
+            printf("Capability:%02X %02X %02X %02X %02X %02X %02X %02X \n",
             capability[0], capability[1], capability[2], capability[3],
             capability[4], capability[5], capability[6], capability[7]);
 
             if (capability[0] & 1)
             {
-                printf("Direct LBA:\tenabled\r\n");
+                printf("Direct LBA:\tenabled\n");
             }
 
             if (capability[0] & 2)
             {
-                printf("Vendor Storage:\tenabled\r\n");
+                printf("Vendor Storage:\tenabled\n");
             }
 
             if (capability[0] & 4)
             {
-                printf("First 4m Access:\tenabled\r\n");
+                printf("First 4m Access:\tenabled\n");
             }
             if (capability[0] & 8)
             {
-                printf("Read LBA:\tenabled\r\n");
+                printf("Read LBA:\tenabled\n");
             }
 
             if (capability[0] & 20)
             {
-                printf("Read Com Log:\tenabled\r\n");
+                printf("Read Com Log:\tenabled\n");
             }
 
             if (capability[0] & 40)
             {
-                printf("Read IDB Config:\tenabled\r\n");
+                printf("Read IDB Config:\tenabled\n");
             }
 
             if (capability[0] & 80)
             {
-                printf("Read Secure Mode:\tenabled\r\n");
+                printf("Read Secure Mode:\tenabled\n");
             }
 
             if (capability[1] & 1)
             {
-                printf("New IDB:\tenabled\r\n");
+                printf("New IDB:\tenabled\n");
             }
 
             bSuccess = true;
@@ -3034,7 +3035,7 @@ bool read_capability(STRUCT_RKDEVICE_DESC &dev)
     } 
     else 
     {
-        printf("Read capability quit, creating comm object failed!\r\n");
+        printf("Read capability quit, creating comm object failed!\n");
     }
 
     if (pComm) 
@@ -3068,7 +3069,7 @@ bool read_param(STRUCT_RKDEVICE_DESC &dev, u8 *pParam)
         {
             if (g_pLogObject)
                     g_pLogObject->Record("Error: read parameter failed, err=%d", iRet);
-            printf("Read parameter failed!\r\n");
+            printf("Read parameter failed!\n");
             goto Exit_ReadParam;
         }
 
@@ -3107,7 +3108,7 @@ bool read_gpt(STRUCT_RKDEVICE_DESC &dev, u8 *pGpt)
         {
             if (g_pLogObject)
                     g_pLogObject->Record("Error: read gpt failed, err=%d", iRet);
-            printf("Read GPT failed!\r\n");
+            printf("Read GPT failed!\n");
             goto Exit_ReadGPT;
         }
 
@@ -3145,7 +3146,7 @@ bool read_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiLen, char *szFile)
             file = fopen(szFile, "wb+");
             if( !file ) 
             {
-                printf("Read LBA failed, err=%d, can't open file: %s\r\n", errno, szFile);
+                printf("Read LBA failed, err=%d, can't open file: %s\n", errno, szFile);
                 goto Exit_ReadLBA;
             }
         }
@@ -3166,9 +3167,9 @@ bool read_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiLen, char *szFile)
                     if (bFirst)
                     {
                         if (iTotalRead >= 1024)
-                            printf("Read LBA to file (%d%%)\r\n", (iTotalRead / 1024) * 100 / ((uiLen + iTotalRead) / 1024));
+                            printf("Read LBA to file (%d%%)\n", (iTotalRead / 1024) * 100 / ((uiLen + iTotalRead) / 1024));
                         else
-                            printf("Read LBA to file (%d%%)\r\n", iTotalRead * 100 / (uiLen + iTotalRead));
+                            printf("Read LBA to file (%d%%)\n", iTotalRead * 100 / (uiLen + iTotalRead));
                         bFirst = false;
                     } 
                     else 
@@ -3176,9 +3177,9 @@ bool read_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiLen, char *szFile)
                         CURSOR_MOVEUP_LINE(1);
                         CURSOR_DEL_LINE;
                         if (iTotalRead >= 1024)
-                            printf("Read LBA to file (%d%%)\r\n", (iTotalRead / 1024) * 100 / ((uiLen + iTotalRead) / 1024));
+                            printf("Read LBA to file (%d%%)\n", (iTotalRead / 1024) * 100 / ((uiLen + iTotalRead) / 1024));
                         else
-                            printf("Read LBA to file (%d%%)\r\n", iTotalRead * 100 / (uiLen + iTotalRead));
+                            printf("Read LBA to file (%d%%)\n", iTotalRead * 100 / (uiLen + iTotalRead));
                     }
                 }
                 else
@@ -3191,7 +3192,7 @@ bool read_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiLen, char *szFile)
                 if (g_pLogObject)
                     g_pLogObject->Record("Error: RKU_ReadLBA failed, err=%d", iRet);
 
-                printf("Read LBA failed!\r\n");
+                printf("Read LBA failed!\n");
 
                 goto Exit_ReadLBA;
             }
@@ -3200,7 +3201,7 @@ bool read_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiLen, char *szFile)
     } 
     else 
     {
-        printf("Read LBA quit, creating comm object failed!\r\n");
+        printf("Read LBA quit, creating comm object failed!\n");
     }
 
 Exit_ReadLBA:
@@ -3226,14 +3227,14 @@ bool erase_ubi_block(STRUCT_RKDEVICE_DESC &dev, u32 uiOffset, u32 uiPartSize)
     int iRet;
     DWORD *pID=NULL;
 
-    printf("Erase ubi in, offset=0x%08x,size=0x%08x!\r\n",uiOffset,uiPartSize);
+    printf("Erase ubi in, offset=0x%08x,size=0x%08x!\n",uiOffset,uiPartSize);
     if (!check_device_type(dev, RKUSB_LOADER | RKUSB_MASKROM))
         return false;
 
     pComm =  new CRKUsbComm(dev, g_pLogObject, bRet);
     if (!bRet)
     {
-        printf("Erase ubi quit, creating comm object failed!\r\n");
+        printf("Erase ubi quit, creating comm object failed!\n");
         goto EXIT_UBI_ERASE;
     }
 
@@ -3269,7 +3270,7 @@ bool erase_ubi_block(STRUCT_RKDEVICE_DESC &dev, u32 uiOffset, u32 uiPartSize)
     uiEraseBlock = (uiPartSize + info.usBlockSize -1) / info.usBlockSize;
 
 
-    printf("Erase block start, offset=0x%08x,count=0x%08x!\r\n",uiStartBlock,uiEraseBlock);
+    printf("Erase block start, offset=0x%08x,count=0x%08x!\n",uiStartBlock,uiEraseBlock);
     uiErasePos=uiStartBlock;
 
     while (uiEraseBlock>0)
@@ -3386,7 +3387,7 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
         file = fopen(szFile, "rb");
         if( !file ) 
         {
-            printf("%s failed, err=%d, can't open file: %s\r\n", __func__, errno, szFile);
+            printf("%s failed, err=%d, can't open file: %s\n", __func__, errno, szFile);
             goto Exit_WriteSparseLBA;
         }
 
@@ -3412,7 +3413,7 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
         bRet = erase_partition(pComm, uiBegin, uiSize);
         if (!bRet) 
         {
-            printf("%s failed, erase partition error\r\n", __func__);
+            printf("%s failed, erase partition error\n", __func__);
             goto Exit_WriteSparseLBA;
         }
 
@@ -3466,16 +3467,16 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
                         if (bFirst) 
                         {
                             if (iTotalWrite >= 1024)
-                                printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                                printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                             else
-                                printf("Write LBA from file (%lld%%)\r\n", iTotalWrite * 100 / iFileSize);
+                                printf("Write LBA from file (%lld%%)\n", iTotalWrite * 100 / iFileSize);
                             bFirst = false;
                         } 
                         else 
                         {
                             CURSOR_MOVEUP_LINE(1);
                             CURSOR_DEL_LINE;
-                            printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                            printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                         }
                     }
                     break;
@@ -3525,16 +3526,16 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
                         if (bFirst) 
                         {
                             if (iTotalWrite >= 1024)
-                                printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                                printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                             else
-                                printf("Write LBA from file (%lld%%)\r\n", iTotalWrite * 100 / iFileSize);
+                                printf("Write LBA from file (%lld%%)\n", iTotalWrite * 100 / iFileSize);
                             bFirst = false;
                         } 
                         else 
                         {
                             CURSOR_MOVEUP_LINE(1);
                             CURSOR_DEL_LINE;
-                            printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                            printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                         }
                     }
                     break;
@@ -3547,16 +3548,16 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
                     if (bFirst) 
                     {
                         if (iTotalWrite >= 1024)
-                            printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                            printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                         else
-                            printf("Write LBA from file (%lld%%)\r\n", iTotalWrite * 100 / iFileSize);
+                            printf("Write LBA from file (%lld%%)\n", iTotalWrite * 100 / iFileSize);
                         bFirst = false;
                     } 
                     else 
                     {
                         CURSOR_MOVEUP_LINE(1);
                         CURSOR_DEL_LINE;
-                        printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                        printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                     }
                     break;
 
@@ -3570,7 +3571,7 @@ bool write_sparse_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, UINT uiSize, char
     } 
     else 
     {
-        printf("Write LBA quit, creating comm object failed!\r\n");
+        printf("Write LBA quit, creating comm object failed!\n");
     }
 
 Exit_WriteSparseLBA:
@@ -3607,7 +3608,7 @@ bool write_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, char *szFile)
         file = fopen(szFile, "rb");
         if( !file ) 
         {
-            printf("Write LBA failed, err=%d, can't open file: %s\r\n", errno, szFile);
+            printf("Write LBA failed, err=%d, can't open file: %s\n", errno, szFile);
             goto Exit_WriteLBA;
         }
 
@@ -3628,16 +3629,16 @@ bool write_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, char *szFile)
                 if (bFirst) 
                 {
                     if (iTotalWrite >= 1024)
-                        printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                        printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                     else
-                        printf("Write LBA from file (%lld%%)\r\n", iTotalWrite * 100 / iFileSize);
+                        printf("Write LBA from file (%lld%%)\n", iTotalWrite * 100 / iFileSize);
                     bFirst = false;
                 } 
                 else 
                 {
                     CURSOR_MOVEUP_LINE(1);
                     CURSOR_DEL_LINE;
-                    printf("Write LBA from file (%lld%%)\r\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
+                    printf("Write LBA from file (%lld%%)\n", (iTotalWrite / 1024) * 100 / (iFileSize / 1024));
                 }
             } 
             else 
@@ -3645,7 +3646,7 @@ bool write_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, char *szFile)
                 if (g_pLogObject)
                     g_pLogObject->Record("Error: RKU_WriteLBA failed, err=%d", iRet);
 
-                printf("Write LBA failed!\r\n");
+                printf("Write LBA failed!\n");
                 goto Exit_WriteLBA;
             }
         }
@@ -3653,7 +3654,7 @@ bool write_lba(STRUCT_RKDEVICE_DESC &dev, UINT uiBegin, char *szFile)
     } 
     else 
     {
-        printf("Write LBA quit, creating comm object failed!\r\n");
+        printf("Write LBA quit, creating comm object failed!\n");
     }
 
 Exit_WriteLBA:
@@ -3772,7 +3773,7 @@ void list_device(CRKScan *pScan)
 
     if (cnt == 0) 
     {
-        printf("not found any devices!\r\n");
+        printf("not found any devices!\n");
         return;
     }
 
@@ -3787,7 +3788,7 @@ void list_device(CRKScan *pScan)
         else
             strDevType = "Unknown";
 
-        printf( "DevNo=%d\tVid=0x%x,Pid=0x%x,LocationID=%x\t%s\r\n",
+        printf( "DevNo=%d\tVid=0x%x,Pid=0x%x,LocationID=%x\t%s\n",
                 i+1,desc.usVid,
                 desc.usPid,desc.uiLocationID,strDevType.c_str());
     }
@@ -3821,7 +3822,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     else 
     if((strcmp(strCmd.c_str(), "-V") == 0) || (strcmp(strCmd.c_str(), "--VERSION") == 0)) 
     {
-        printf("rkdeveloptool ver %s\r\n", PACKAGE_VERSION);
+        printf("rkdeveloptool ver %s\n", PACKAGE_VERSION);
         return true;
     } 
     else 
@@ -3865,7 +3866,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         ERROR_COLOR_ATTR;
         printf("Did not find any rockusb device, please plug device in!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     } 
     else 
@@ -3874,7 +3875,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         ERROR_COLOR_ATTR;
         printf("Found too many rockusb devices, please plug devices out!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -3884,7 +3885,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         ERROR_COLOR_ATTR;
         printf("Getting information about rockusb device failed!");
         NORMAL_COLOR_ATTR;
-        printf("\r\n");
+        printf("\n");
         return bSuccess;
     }
 
@@ -3892,7 +3893,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
     {
         if ((argc != 2) && (argc != 3))
         {
-            printf("Parameter of [RD] command is invalid, please check help!\r\n");
+            printf("Parameter of [RD] command is invalid, please check help!\n");
         }
         else 
         {
@@ -3908,14 +3909,14 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
 
                 if (*pszEnd)
                 {
-                    printf("Subcode is invalid, please check!\r\n");
+                    printf("Subcode is invalid, please check!\n");
                 }
                 else 
                 {
                     if (uiSubCode <= 5)
                         bSuccess = reset_device(dev, uiSubCode);
                     else
-                        printf("Subcode is invalid, please check!\r\n");
+                        printf("Subcode is invalid, please check!\n");
                 }
             }
         }
@@ -3959,13 +3960,13 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         {
             ret = find_config_item(g_ConfigItemVec, "loader");
             if (ret == -1)
-                printf("Did not find loader item in config!\r\n");
+                printf("Did not find loader item in config!\n");
             else
                 bSuccess = download_boot(dev, g_ConfigItemVec[ret].szItemValue);
         } 
         else
         {
-            printf("Parameter of [DB] command is invalid, please check help!\r\n");
+            printf("Parameter of [DB] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -3979,7 +3980,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         } 
         else
         {
-            printf("Parameter of [GPT] command is invalid, please check help!\r\n");
+            printf("Parameter of [GPT] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -3993,7 +3994,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         } 
         else
         {
-            printf("Parameter of [PRM] command is invalid, please check help!\r\n");
+            printf("Parameter of [PRM] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -4007,7 +4008,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         } 
         else
         {
-            printf("Parameter of [UL] command is invalid, please check help!\r\n");
+            printf("Parameter of [UL] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -4019,7 +4020,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
         } 
         else
         {
-            printf("Parameter of [EF] command is invalid, please check help!\r\n");
+            printf("Parameter of [EF] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -4033,7 +4034,7 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
 
             if (*pszEnd)
             {
-                printf("Begin is invalid, please check!\r\n");
+                printf("Begin is invalid, please check!\n");
             }
             else 
             {
@@ -4050,13 +4051,13 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                     if (bSuccess)
                         bSuccess = write_lba(dev, (u32)uiBegin, argv[3]);
                     else
-                        printf("Failure of Erase for writing ubi image!\r\n");
+                        printf("Failure of Erase for writing ubi image!\n");
                 }
             }
         } 
         else
         {
-            printf("Parameter of [WL] command is invalid, please check help!\r\n");
+            printf("Parameter of [WL] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -4089,12 +4090,12 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                         if (bSuccess)
                             bSuccess = write_lba(dev, (u32)lba, argv[3]);
                         else
-                            printf("Failure of Erase for writing ubi image!\r\n");
+                            printf("Failure of Erase for writing ubi image!\n");
                     }
                 } 
                 else
                 {
-                    printf("No found %s partition\r\n", argv[2]);
+                    printf("No found %s partition\n", argv[2]);
                 }
             } 
             else 
@@ -4118,23 +4119,23 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
                             if (bSuccess)
                                 bSuccess = write_lba(dev, part_offset, argv[3]);
                             else
-                                printf("Failure of Erase for writing ubi image!\r\n");
+                                printf("Failure of Erase for writing ubi image!\n");
                         }
                     } 
                     else
                     {
-                        printf("No found %s partition\r\n", argv[2]);
+                        printf("No found %s partition\n", argv[2]);
                     }
                 }
                 else
                 {
-                    printf("Not found any partition table!\r\n");
+                    printf("Not found any partition table!\n");
                 }
             }
         } 
         else
         {
-            printf("Parameter of [WLX] command is invalid, please check help!\r\n");
+            printf("Parameter of [WLX] command is invalid, please check help!\n");
         }
     } 
     else 
@@ -4145,21 +4146,21 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
 
         if (argc != 5)
         {
-            printf("Parameter of [RL] command is invalid, please check help!\r\n");
+            printf("Parameter of [RL] command is invalid, please check help!\n");
         }
         else 
         {
             uiBegin = strtoul(argv[2], &pszEnd, 0);
             if (*pszEnd)
             {
-                printf("Begin is invalid, please check!\r\n");
+                printf("Begin is invalid, please check!\n");
             }
             else 
             {
                 uiLen = strtoul(argv[3], &pszEnd, 0);
                 if (*pszEnd)
                 {
-                    printf("Len is invalid, please check!\r\n");
+                    printf("Len is invalid, please check!\n");
                 }
                 else 
                 {
@@ -4178,17 +4179,17 @@ bool handle_command(int argc, char* argv[], CRKScan *pScan)
             {
                 bSuccess = print_parameter(dev);
                 if (!bSuccess)
-                    printf("Not found any partition table!\r\n");
+                    printf("Not found any partition table!\n");
             }
         } 
         else
         {
-            printf("Parameter of [PPT] command is invalid, please check help!\r\n");
+            printf("Parameter of [PPT] command is invalid, please check help!\n");
         }
     } 
     else 
     {
-        printf("command is invalid!\r\n");
+        printf("command is invalid!\n");
         usage();
     }
 
